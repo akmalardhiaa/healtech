@@ -1,0 +1,233 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* token warna, tinggal ditukar di .dark jadi komponennya tidak perlu
+   bikin varian sendiri per tema */
+@layer base {
+  :root {
+    --canvas: 210 40% 97%;
+    --surface: 0 0% 100%;
+    --elevated: 210 40% 99%;
+    --line: 214 26% 88%;
+
+    --ink: 217 33% 14%;
+    --muted: 216 15% 42%;
+    --faint: 216 14% 60%;
+
+    --primary: 214 88% 52%;
+    --primary-soft: 214 96% 95%;
+    --primary-ink: 214 88% 38%;
+
+    --vital: 165 72% 38%;
+    --vital-soft: 165 70% 93%;
+    --vital-ink: 165 78% 26%;
+
+    --warn: 36 94% 48%;
+    --warn-soft: 40 96% 93%;
+    --warn-ink: 30 90% 34%;
+
+    --danger: 356 78% 52%;
+    --danger-soft: 356 90% 96%;
+    --danger-ink: 356 72% 40%;
+
+    --shadow: 217 45% 25%;
+    --grid: 214 30% 88%;
+  }
+
+  .dark {
+    --canvas: 222 47% 7%;
+    --surface: 222 42% 10%;
+    --elevated: 221 39% 13%;
+    --line: 220 25% 20%;
+
+    --ink: 210 40% 96%;
+    --muted: 215 20% 68%;
+    --faint: 215 16% 50%;
+
+    --primary: 213 94% 64%;
+    --primary-soft: 214 60% 18%;
+    --primary-ink: 213 96% 78%;
+
+    --vital: 162 72% 45%;
+    --vital-soft: 165 45% 15%;
+    --vital-ink: 162 76% 62%;
+
+    --warn: 38 96% 58%;
+    --warn-soft: 34 55% 16%;
+    --warn-ink: 40 96% 70%;
+
+    --danger: 356 88% 64%;
+    --danger-soft: 356 45% 18%;
+    --danger-ink: 356 92% 76%;
+
+    --shadow: 222 60% 2%;
+    --grid: 220 28% 18%;
+  }
+
+  * {
+    @apply border-line;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+
+  /* biar angka lurus kalau ditaruh dalam kolom */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.28);
+  }
+
+  /* scrollbar custom biar ikut tema */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--line));
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--faint));
+    background-clip: content-box;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-surface shadow-card;
+  }
+
+  .glass {
+    background: hsl(var(--surface) / 0.72);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5
+           text-sm font-semibold transition-all duration-200
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-primary text-white shadow-[0_8px_24px_-10px_hsl(var(--primary)/0.9)]
+           hover:brightness-110 active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply btn border border-line bg-surface text-ink hover:bg-elevated active:scale-[0.98];
+  }
+  .btn-danger {
+    @apply btn bg-danger text-white hover:brightness-110 active:scale-[0.98];
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-line bg-elevated px-4 py-2.5 text-sm text-ink
+           placeholder:text-faint transition-shadow duration-200
+           focus:border-primary focus:outline-none
+           focus:ring-4 focus:ring-primary/15;
+  }
+
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted;
+  }
+
+  /* efek kilau pas hover kartu */
+  .sheen {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+      105deg,
+      transparent 35%,
+      hsl(var(--primary) / 0.14) 48%,
+      transparent 62%
+    );
+    transform: translateX(-120%);
+    transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .sheen:hover::after {
+    transform: translateX(120%);
+  }
+
+  /* grid tipis di belakang hero */
+  .grid-bg {
+    background-image: linear-gradient(hsl(var(--grid) / 0.6) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--grid) / 0.6) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+
+  .skeleton {
+    @apply relative overflow-hidden rounded-lg bg-line/60;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full animate-shimmer;
+    background: linear-gradient(90deg, transparent, hsl(var(--surface) / 0.65), transparent);
+  }
+
+  /* .reveal mulai dari hidden, dimunculkan GSAP ScrollTrigger.
+     ditaruh di CSS biar tidak kedip sebelum JS-nya jalan */
+  .reveal {
+    opacity: 0;
+    will-change: transform, opacity;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
+
+/* matikan animasi kalau user set reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

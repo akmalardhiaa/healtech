@@ -1,0 +1,407 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import {
+  AlertTriangle,
+  ArrowUpRight,
+  ClipboardCheck,
+  Package,
+  Truck,
+  Wallet,
+} from 'lucide-react'
+import clsx from 'clsx'
+
+import PageHeader from '@/components/PageHeader'
+import StatCard from '@/components/StatCard'
+import StatusBadge from '@/components/StatusBadge'
+import { SkeletonCard, SkeletonChart } from '@/components/Skeleton'
+import { ChartCard, ChartTooltip, Legend, axisProps, categorical, chartColors } from '@/components/ChartKit'
+import { getDashboard } from '@/lib/api'
+import { expiryLevel, daysUntil, num, rupiahShort, overallLevel } from '@/lib/format'
+import { itemVariants, listVariants, revealOnScroll } from '@/lib/motion'
+import { useAuth } from '@/store/AuthContext'
+
+const toneDot = {
+  danger: 'bg-danger',
+  warn: 'bg-warn',
+  vital: 'bg-vital',
+  primary: 'bg-primary',
+}
+
+export default function Dashboard() {
+  const [data, setData] = useState(null)
+  const scope = useRef(null)
+  const { user } = useAuth()
+
+  useEffect(() => {
+    let alive = true
+    getDashboard().then((d) => alive && setData(d))
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!data) return
+    const ctx = revealOnScroll(scope)
+    return () => ctx?.revert()
+  }, [data])
+
+  const stats = useMemo(() => {
+    if (!data) return null
+    const { medicines, shipments, requests } = data
+
+    const critical = medicines.filter((m) => overallLevel(m) === 'critical').length
+    const expiringSoon = medicines.filter((m) => expiryLevel(m.expiry) !== 'safe').length
+    const value = medicines.reduce((s, m) => s + m.stock * m.price, 0)
+    const inTransit = shipments.filter((s) => s.stage > 0 && s.stage < 3).length
+    const pending = requests.filter((r) => r.status === 'pending').length
+
+    return { total: medicines.length, critical, expiringSoon, value, inTransit, pending }
+  }, [data])
+
+  const greeting = useMemo(() => {
+    const h = new Date().getHours()
+    if (h < 11) return 'Selamat pagi'
+    if (h < 15) return 'Selamat siang'
+    if (h < 19) return 'Selamat sore'
+    return 'Selamat malam'
+  }, [])
+
+  // panel perlu perhatian, urut dari yang paling dekat kedaluwarsa
+  const attention = useMemo(() => {
+    if (!data) return []
+    return [...data.medicines]
+      .sort((a, b) => daysUntil(a.expiry) - daysUntil(b.expiry))
+      .slice(0, 6)
+  }, [data])
+
+  if (!data || !stats) {
+    return (
+      <div className="space-y-6">
+        <div className="skeleton h-9 w-64 rounded-lg" />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <SkeletonChart className="lg:col-span-2" />
+          <SkeletonChart />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div ref={scope} className="space-y-6">
+      <PageHeader
+        eyebrow="StockPulse"
+        title={`${greeting}, ${user?.name?.split(' ')[0] ?? 'Tim'}.`}
+        description="Ringkasan kondisi stok, distribusi, dan permintaan obat hari ini di seluruh unit."
+        actions={
+          <Link to="/approval" className="btn-primary group">
+            <ClipboardCheck size={15} strokeWidth={2.4} />
+            {stats.pending} menunggu
+            <ArrowUpRight
+              size={14}
+              className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            />
+          </Link>
+        }
+      />
+
+      <motion.div
+        variants={listVariants(0.07)}
+        initial="initial"
+        animate="animate"
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      >
+        <StatCard
+          icon={Package}
+          label="Total item obat"
+          value={stats.total}
+          delta={4.2}
+          hint={`${num(stats.total * 1240)} unit tersimpan`}
+          accent="primary"
+          progress={82}
+        />
+        <StatCard
+          icon={AlertTriangle}
+          label="Perlu tindakan"
+          value={stats.critical}
+          delta={-11.5}
+          hint={`${stats.expiringSoon} item mendekati kedaluwarsa`}
+          accent="danger"
+          progress={(stats.critical / stats.total) * 100}
+        />
+        <StatCard
+          icon={Truck}
+          label="Dalam perjalanan"
+          value={stats.inTransit}
+          delta={8.1}
+          hint={`${data.shipments.length} pengiriman hari ini`}
+          accent="vital"
+          progress={(stats.inTransit / data.shipments.length) * 100}
+        />
+        <StatCard
+          icon={Wallet}
+          label="Nilai persediaan"
+          value={stats.value}
+          format={rupiahShort}
+          delta={2.6}
+          hint="Estimasi harga pokok gudang pusat"
+          accent="warn"
+          progress={68}
+        />
+      </motion.div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <ChartCard
+          className="lg:col-span-2"
+          title="Tren arus stok"
+          subtitle="Perbandingan obat masuk dan keluar selama 7 bulan terakhir"
+          action={
+            <span className="rounded-full bg-vital-soft px-2.5 py-1 text-[11px] font-bold text-vital-ink">
+              +12,4% YoY
+            </span>
+          }
+        >
+          <div className="h-[280px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data.consumptionTrend} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gMasuk" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={chartColors.primary} stopOpacity={0.42} />
+                    <stop offset="100%" stopColor={chartColors.primary} stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="gKeluar" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={chartColors.vital} stopOpacity={0.38} />
+                    <stop offset="100%" stopColor={chartColors.vital} stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+
+                <CartesianGrid strokeDasharray="3 6" stroke={chartColors.line} vertical={false} />
+                <XAxis dataKey="month" {...axisProps} />
+                {/* dibulatkan ke ribuan, kalau tidak labelnya kepotong */}
+                <YAxis
+                  {...axisProps}
+                  width={58}
+                  tickFormatter={(v) => (v === 0 ? '0' : `${Math.round(v / 1000)}rb`)}
+                />
+                <Tooltip
+                  content={<ChartTooltip />}
+                  cursor={{ stroke: chartColors.primary, strokeWidth: 1, strokeDasharray: '4 4' }}
+                />
+
+                <Area
+                  type="monotone"
+                  dataKey="masuk"
+                  name="Masuk"
+                  stroke={chartColors.primary}
+                  strokeWidth={2.4}
+                  fill="url(#gMasuk)"
+                  animationDuration={1600}
+                  animationEasing="ease-out"
+                  dot={false}
+                  activeDot={{ r: 5, strokeWidth: 2, stroke: 'hsl(var(--surface))' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="keluar"
+                  name="Keluar"
+                  stroke={chartColors.vital}
+                  strokeWidth={2.4}
+                  fill="url(#gKeluar)"
+                  animationDuration={1600}
+                  animationBegin={220}
+                  animationEasing="ease-out"
+                  dot={false}
+                  activeDot={{ r: 5, strokeWidth: 2, stroke: 'hsl(var(--surface))' }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          <Legend
+            items={[
+              { label: 'Obat masuk', color: chartColors.primary },
+              { label: 'Obat keluar', color: chartColors.vital },
+            ]}
+          />
+        </ChartCard>
+
+        <ChartCard title="Komposisi kategori" subtitle="Distribusi item berdasarkan golongan obat">
+          <div className="h-[240px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data.categoryMix}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius="58%"
+                  outerRadius="86%"
+                  paddingAngle={3}
+                  stroke="hsl(var(--surface))"
+                  strokeWidth={3}
+                  animationDuration={1400}
+                >
+                  {data.categoryMix.map((_, i) => (
+                    <Cell key={i} fill={categorical[i % categorical.length]} />
+                  ))}
+                </Pie>
+                <Tooltip content={<ChartTooltip unit="%" />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          <Legend
+            items={data.categoryMix.map((c, i) => ({
+              label: `${c.name} · ${c.value}%`,
+              color: categorical[i % categorical.length],
+            }))}
+          />
+        </ChartCard>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <ChartCard title="Permintaan per unit" subtitle="Jumlah permintaan obat bulan berjalan">
+          <div className="h-[260px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={data.unitDemand}
+                layout="vertical"
+                margin={{ top: 0, right: 12, left: 4, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 6" stroke={chartColors.line} horizontal={false} />
+                <XAxis type="number" {...axisProps} />
+                <YAxis type="category" dataKey="unit" {...axisProps} width={92} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--primary) / 0.06)' }} />
+                <Bar
+                  dataKey="permintaan"
+                  name="Permintaan"
+                  radius={[0, 6, 6, 0]}
+                  animationDuration={1300}
+                >
+                  {data.unitDemand.map((_, i) => (
+                    <Cell key={i} fill={categorical[i % categorical.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+
+        <div className="reveal card overflow-hidden">
+          <div className="flex items-center justify-between border-b border-line p-5">
+            <div>
+              <h3 className="text-sm font-bold tracking-tight">Perlu perhatian</h3>
+              <p className="mt-0.5 text-xs text-faint">Urutan FEFO, kedaluwarsa terdekat</p>
+            </div>
+            <Link
+              to="/stok"
+              className="text-[11px] font-bold text-primary transition-colors hover:text-primary-ink"
+            >
+              Lihat semua
+            </Link>
+          </div>
+
+          <motion.ul
+            variants={listVariants(0.055)}
+            initial="initial"
+            animate="animate"
+            className="divide-y divide-line"
+          >
+            {attention.map((m) => {
+              const level = expiryLevel(m.expiry)
+              const d = daysUntil(m.expiry)
+              return (
+                <motion.li
+                  key={m.id}
+                  variants={itemVariants}
+                  whileHover={{ x: 4 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                  className="flex items-center gap-3 px-5 py-3"
+                >
+                  <span
+                    className={clsx(
+                      'h-8 w-1 shrink-0 rounded-full',
+                      level === 'critical' ? 'bg-danger' : level === 'warning' ? 'bg-warn' : 'bg-vital'
+                    )}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-bold">{m.name}</p>
+                    <p className="truncate text-[10px] text-faint">
+                      {m.batch} · {m.location}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-xs font-extrabold tnum">{d} hari</p>
+                    <p className="text-[10px] text-faint">sisa umur</p>
+                  </div>
+                </motion.li>
+              )
+            })}
+          </motion.ul>
+        </div>
+
+        <div className="reveal card overflow-hidden">
+          <div className="border-b border-line p-5">
+            <h3 className="text-sm font-bold tracking-tight">Aktivitas sistem</h3>
+            <p className="mt-0.5 text-xs text-faint">Log perubahan stok &amp; logistik</p>
+          </div>
+
+          <motion.ol
+            variants={listVariants(0.055)}
+            initial="initial"
+            animate="animate"
+            className="relative space-y-4 p-5"
+          >
+            <span aria-hidden className="absolute bottom-6 left-[26px] top-7 w-px bg-line" />
+
+            {data.activityFeed.map((a) => (
+              <motion.li key={a.id} variants={itemVariants} className="relative flex gap-3.5 pl-0">
+                <span className="relative z-10 mt-1 grid h-3 w-3 shrink-0 place-items-center">
+                  <span
+                    className={clsx(
+                      'h-3 w-3 rounded-full ring-4 ring-surface',
+                      toneDot[a.type] ?? 'bg-primary'
+                    )}
+                  />
+                </span>
+                <div className="min-w-0 pb-0.5">
+                  <p className="text-xs leading-snug">{a.text}</p>
+                  <p className="mt-0.5 text-[10px] text-faint">{a.time} lalu</p>
+                </div>
+              </motion.li>
+            ))}
+          </motion.ol>
+        </div>
+      </div>
+
+      <div className="reveal card flex flex-wrap items-center gap-x-6 gap-y-3 p-5">
+        <p className="text-xs font-bold uppercase tracking-wider text-muted">Kunci indikator</p>
+        <StatusBadge level="safe" label="Aman · > 90 hari" />
+        <StatusBadge level="warning" label="Perhatian · 31–90 hari" />
+        <StatusBadge level="critical" label="Kritis · ≤ 30 hari" />
+        <p className="ml-auto text-[11px] text-faint">
+          Sistem FEFO menandai batch otomatis berdasarkan sisa umur simpan.
+        </p>
+      </div>
+    </div>
+  )
+}
