@@ -45,9 +45,9 @@ export default {
         '3xl': '1.5rem',
       },
       boxShadow: {
-        card: '0 1px 2px hsl(var(--shadow) / 0.06), 0 8px 24px -12px hsl(var(--shadow) / 0.18)',
-        lift: '0 2px 4px hsl(var(--shadow) / 0.06), 0 24px 48px -20px hsl(var(--shadow) / 0.28)',
-        glow: '0 0 0 1px hsl(var(--primary) / 0.28), 0 12px 40px -12px hsl(var(--primary) / 0.45)',
+        card: '0 1px 2px hsl(var(--shadow) / 0.05), 0 6px 18px -12px hsl(var(--shadow) / 0.14)',
+        lift: '0 2px 6px hsl(var(--shadow) / 0.06), 0 18px 36px -20px hsl(var(--shadow) / 0.2)',
+        glow: '0 0 0 1px hsl(var(--primary) / 0.18), 0 8px 22px -14px hsl(var(--primary) / 0.28)',
       },
       keyframes: {
         shimmer: {

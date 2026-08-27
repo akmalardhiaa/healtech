@@ -90,15 +90,15 @@ export default function Login() {
 
   return (
     <div ref={scope} className="relative min-h-dvh overflow-hidden bg-canvas">
-      <div aria-hidden className="pointer-events-none absolute inset-0 grid-bg opacity-70" />
+      <div aria-hidden className="pointer-events-none absolute inset-0 grid-bg opacity-50" />
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
-          className="absolute -left-32 top-0 h-[34rem] w-[34rem] rounded-full bg-primary/20 blur-[110px]"
+          className="absolute -left-32 top-0 h-[34rem] w-[34rem] rounded-full bg-primary/[0.08] blur-[120px]"
           animate={{ x: [0, 60, 0], y: [0, 40, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute -bottom-40 right-0 h-[30rem] w-[30rem] rounded-full bg-vital/20 blur-[110px]"
+          className="absolute -bottom-40 right-0 h-[30rem] w-[30rem] rounded-full bg-vital/[0.08] blur-[120px]"
           animate={{ x: [0, -50, 0], y: [0, -30, 0] }}
           transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
         />
@@ -107,9 +107,8 @@ export default function Login() {
       <div className="relative mx-auto grid min-h-dvh w-full max-w-6xl items-center gap-10 px-5 py-10 lg:grid-cols-2 lg:gap-16">
         <div className="order-2 lg:order-1">
           <div className="lg-brand mb-8 flex items-center gap-3">
-            <span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-primary text-white shadow-[0_10px_30px_-10px_hsl(var(--primary)/1)]">
+            <span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-primary text-white shadow-[0_5px_14px_-7px_hsl(var(--primary)/0.55)]">
               <Activity size={22} strokeWidth={2.6} />
-              <span className="absolute inset-0 animate-pulseRing rounded-2xl bg-primary/40" />
             </span>
             <div className="leading-tight">
               <p className="text-lg font-extrabold tracking-tight">VitalStock</p>

@@ -31,7 +31,7 @@ export default function StatCard({
   const rx = useSpring(useMotionValue(0), { stiffness: 260, damping: 24 })
   const ry = useSpring(useMotionValue(0), { stiffness: 260, damping: 24 })
 
-  const spotlight = useMotionTemplate`radial-gradient(340px circle at ${mx}px ${my}px, hsl(var(--primary) / 0.13), transparent 70%)`
+  const spotlight = useMotionTemplate`radial-gradient(340px circle at ${mx}px ${my}px, hsl(var(--primary) / 0.06), transparent 70%)`
 
   function handleMove(e) {
     const el = ref.current
@@ -41,8 +41,8 @@ export default function StatCard({
     const y = e.clientY - r.top
     mx.set(x)
     my.set(y)
-    ry.set(((x - r.width / 2) / r.width) * 10)
-    rx.set((-(y - r.height / 2) / r.height) * 10)
+    ry.set(((x - r.width / 2) / r.width) * 4)
+    rx.set((-(y - r.height / 2) / r.height) * 4)
   }
 
   function handleLeave() {
@@ -59,7 +59,7 @@ export default function StatCard({
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
       style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }}
-      whileHover={{ y: -5 }}
+      whileHover={{ y: -3 }}
       transition={{ type: 'spring', stiffness: 380, damping: 26 }}
       className={clsx(
         // jangan kasih .reveal di sini, transform-nya sudah dipegang Framer

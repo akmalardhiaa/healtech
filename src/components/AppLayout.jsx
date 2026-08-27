@@ -12,8 +12,8 @@ export default function AppLayout() {
   return (
     <div className="min-h-dvh">
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -left-40 -top-40 h-[32rem] w-[32rem] rounded-full bg-primary/[0.07] blur-[100px]" />
-        <div className="absolute -bottom-40 right-0 h-[28rem] w-[28rem] rounded-full bg-vital/[0.07] blur-[100px]" />
+        <div className="absolute -left-40 -top-40 h-[32rem] w-[32rem] rounded-full bg-primary/[0.04] blur-[110px]" />
+        <div className="absolute -bottom-40 right-0 h-[28rem] w-[28rem] rounded-full bg-vital/[0.04] blur-[110px]" />
       </div>
 
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />

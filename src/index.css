@@ -6,63 +6,66 @@
    bikin varian sendiri per tema */
 @layer base {
   :root {
-    --canvas: 210 40% 97%;
+    --canvas: 200 38% 96%;
     --surface: 0 0% 100%;
-    --elevated: 210 40% 99%;
-    --line: 214 26% 88%;
+    --elevated: 200 36% 98%;
+    --line: 205 24% 88%;
 
-    --ink: 217 33% 14%;
-    --muted: 216 15% 42%;
-    --faint: 216 14% 60%;
+    --ink: 208 30% 19%;
+    --muted: 208 14% 44%;
+    --faint: 208 13% 61%;
 
-    --primary: 214 88% 52%;
-    --primary-soft: 214 96% 95%;
-    --primary-ink: 214 88% 38%;
+    /* biru medis: tenang dan tepercaya, bukan biru neon */
+    --primary: 202 80% 40%;
+    --primary-soft: 202 72% 94%;
+    --primary-ink: 204 82% 30%;
 
-    --vital: 165 72% 38%;
-    --vital-soft: 165 70% 93%;
-    --vital-ink: 165 78% 26%;
+    /* hijau klinis untuk kondisi aman */
+    --vital: 168 60% 34%;
+    --vital-soft: 166 48% 93%;
+    --vital-ink: 170 66% 23%;
 
-    --warn: 36 94% 48%;
-    --warn-soft: 40 96% 93%;
-    --warn-ink: 30 90% 34%;
+    /* amber dan merah hanya untuk peringatan */
+    --warn: 34 86% 45%;
+    --warn-soft: 38 88% 93%;
+    --warn-ink: 28 78% 32%;
 
-    --danger: 356 78% 52%;
-    --danger-soft: 356 90% 96%;
-    --danger-ink: 356 72% 40%;
+    --danger: 358 68% 48%;
+    --danger-soft: 358 76% 96%;
+    --danger-ink: 358 66% 37%;
 
-    --shadow: 217 45% 25%;
-    --grid: 214 30% 88%;
+    --shadow: 205 35% 32%;
+    --grid: 205 26% 90%;
   }
 
   .dark {
-    --canvas: 222 47% 7%;
-    --surface: 222 42% 10%;
-    --elevated: 221 39% 13%;
-    --line: 220 25% 20%;
+    --canvas: 206 28% 11%;
+    --surface: 206 26% 14%;
+    --elevated: 206 24% 18%;
+    --line: 206 18% 25%;
 
-    --ink: 210 40% 96%;
-    --muted: 215 20% 68%;
-    --faint: 215 16% 50%;
+    --ink: 200 24% 94%;
+    --muted: 205 14% 71%;
+    --faint: 205 12% 55%;
 
-    --primary: 213 94% 64%;
-    --primary-soft: 214 60% 18%;
-    --primary-ink: 213 96% 78%;
+    --primary: 200 72% 58%;
+    --primary-soft: 202 42% 20%;
+    --primary-ink: 199 78% 74%;
 
-    --vital: 162 72% 45%;
-    --vital-soft: 165 45% 15%;
-    --vital-ink: 162 76% 62%;
+    --vital: 168 52% 48%;
+    --vital-soft: 168 36% 18%;
+    --vital-ink: 166 60% 66%;
 
-    --warn: 38 96% 58%;
-    --warn-soft: 34 55% 16%;
-    --warn-ink: 40 96% 70%;
+    --warn: 36 82% 56%;
+    --warn-soft: 33 44% 19%;
+    --warn-ink: 38 86% 70%;
 
-    --danger: 356 88% 64%;
-    --danger-soft: 356 45% 18%;
-    --danger-ink: 356 92% 76%;
+    --danger: 358 72% 60%;
+    --danger-soft: 358 38% 21%;
+    --danger-ink: 358 80% 76%;
 
-    --shadow: 222 60% 2%;
-    --grid: 220 28% 18%;
+    --shadow: 206 40% 4%;
+    --grid: 206 20% 22%;
   }
 
   * {
@@ -132,8 +135,8 @@
            disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-primary text-white shadow-[0_8px_24px_-10px_hsl(var(--primary)/0.9)]
-           hover:brightness-110 active:scale-[0.98];
+    @apply btn bg-primary text-white shadow-[0_4px_12px_-6px_hsl(var(--primary)/0.5)]
+           hover:brightness-105 active:scale-[0.98];
   }
   .btn-ghost {
     @apply btn border border-line bg-surface text-ink hover:bg-elevated active:scale-[0.98];
@@ -168,7 +171,7 @@
     background: linear-gradient(
       105deg,
       transparent 35%,
-      hsl(var(--primary) / 0.14) 48%,
+      hsl(var(--primary) / 0.06) 48%,
       transparent 62%
     );
     transform: translateX(-120%);
@@ -180,8 +183,8 @@
 
   /* grid tipis di belakang hero */
   .grid-bg {
-    background-image: linear-gradient(hsl(var(--grid) / 0.6) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--grid) / 0.6) 1px, transparent 1px);
+    background-image: linear-gradient(hsl(var(--grid) / 0.35) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--grid) / 0.35) 1px, transparent 1px);
     background-size: 44px 44px;
     mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
     -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);

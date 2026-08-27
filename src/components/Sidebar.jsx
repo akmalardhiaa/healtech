@@ -45,7 +45,7 @@ function NavRow({ item, onNavigate }) {
             className={clsx(
               'relative grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-all duration-200',
               isActive
-                ? 'bg-primary text-white shadow-[0_6px_18px_-6px_hsl(var(--primary)/0.9)]'
+                ? 'bg-primary text-white shadow-[0_3px_10px_-5px_hsl(var(--primary)/0.5)]'
                 : 'bg-elevated text-muted group-hover:text-primary'
             )}
           >
@@ -92,12 +92,11 @@ function SidebarBody({ onNavigate }) {
     <div ref={scope} className="flex h-full flex-col gap-6 p-4">
       <div className="flex items-center gap-2.5 px-1 pt-1">
         <motion.span
-          className="relative grid h-9 w-9 place-items-center rounded-xl bg-primary text-white shadow-[0_8px_22px_-8px_hsl(var(--primary)/1)]"
+          className="relative grid h-9 w-9 place-items-center rounded-xl bg-primary text-white shadow-[0_4px_12px_-6px_hsl(var(--primary)/0.55)]"
           whileHover={{ rotate: -8, scale: 1.06 }}
           transition={{ type: 'spring', stiffness: 400, damping: 18 }}
         >
           <Activity size={18} strokeWidth={2.6} />
-          <span className="absolute inset-0 animate-pulseRing rounded-xl bg-primary/40" />
         </motion.span>
         <div className="leading-tight">
           <p className="text-[15px] font-extrabold tracking-tight">VitalStock</p>
