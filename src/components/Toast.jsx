@@ -77,7 +77,6 @@ export function ToastProvider({ children }) {
                   <X size={13} strokeWidth={2.6} />
                 </button>
 
-                {/* Time-remaining bar */}
                 <motion.div
                   className={clsx('absolute bottom-0 left-0 h-0.5', tone.bar)}
                   initial={{ width: '100%' }}

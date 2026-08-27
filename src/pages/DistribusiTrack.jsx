@@ -24,16 +24,11 @@ import { useToast } from '@/components/Toast'
 const stageTone = ['bg-faint', 'bg-primary', 'bg-warn', 'bg-vital']
 const stageLevel = ['neutral', 'info', 'warning', 'safe']
 
-/**
- * Horizontal checkpoint rail. The filled portion animates to the shipment's
- * current stage, and the truck icon rides along with it.
- */
 function StageRail({ stage, compact }) {
   const pct = (stage / (shipmentStages.length - 1)) * 100
 
   return (
     <div className={clsx('relative', compact ? 'pt-1' : 'pt-2')}>
-      {/* Track */}
       <div className="relative h-1 rounded-full bg-line">
         <motion.div
           className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-vital"
@@ -42,7 +37,6 @@ function StageRail({ stage, compact }) {
           transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
         />
 
-        {/* Travelling truck marker */}
         {stage < 3 && (
           <motion.span
             className="absolute -top-[10px] grid h-6 w-6 place-items-center rounded-full bg-primary text-white shadow-[0_4px_12px_-2px_hsl(var(--primary)/0.9)] ring-2 ring-surface"
@@ -61,7 +55,6 @@ function StageRail({ stage, compact }) {
           </motion.span>
         )}
 
-        {/* Checkpoint dots */}
         {shipmentStages.map((_, i) => {
           const done = i <= stage
           return (
@@ -100,7 +93,6 @@ function StageRail({ stage, compact }) {
   )
 }
 
-/** Map-style panel: an SVG route that GSAP draws, with a pulsing convoy. */
 function RouteMap({ shipments }) {
   const svgRef = useRef(null)
   const pathRef = useRef(null)
@@ -160,7 +152,6 @@ function RouteMap({ shipments }) {
 
           <rect width="620" height="230" fill="url(#dots)" opacity="0.7" />
 
-          {/* Main route */}
           <path
             ref={pathRef}
             d="M60 150 C 110 90, 160 60, 200 70 C 250 82, 275 160, 320 175 C 375 192, 405 105, 450 90 C 500 74, 525 140, 560 165"
@@ -170,7 +161,7 @@ function RouteMap({ shipments }) {
             strokeLinecap="round"
           />
 
-          {/* Animated dashes riding the same route */}
+          {/* garis putus-putus yang jalan di rute yang sama */}
           <path
             d="M60 150 C 110 90, 160 60, 200 70 C 250 82, 275 160, 320 175 C 375 192, 405 105, 450 90 C 500 74, 525 140, 560 165"
             fill="none"
@@ -358,7 +349,7 @@ function ShipmentCard({ shp, onAdvance, busy }) {
                         {s}
                       </p>
                       <p className="ml-auto text-[10px] text-faint">
-                        {reached ? (i === 0 ? shp.departedAt : '✓') : '—'}
+                        {reached ? (i === 0 ? shp.departedAt : '✓') : '-'}
                       </p>
                     </motion.li>
                   )
@@ -443,7 +434,6 @@ export default function DistribusiTrack() {
 
       <RouteMap shipments={shipments} />
 
-      {/* Tabs */}
       <div className="flex gap-1 overflow-x-auto rounded-xl bg-elevated p-1 no-scrollbar">
         {tabs.map((t) => {
           const active = tab === t.key

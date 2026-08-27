@@ -122,7 +122,6 @@ export default function Topbar({ onMenu }) {
   const { pathname } = useLocation()
   const current = navItems.find((n) => pathname.startsWith(n.to))
 
-  // Thin progress bar tied to page scroll.
   const { scrollYProgress } = useScroll()
   const progress = useSpring(scrollYProgress, { stiffness: 160, damping: 30, restDelta: 0.001 })
 
@@ -147,7 +146,6 @@ export default function Topbar({ onMenu }) {
           <p className="hidden truncate text-[11px] text-faint sm:block">{current?.hint}</p>
         </div>
 
-        {/* Decorative search — the real filtering lives on each page. */}
         <div className="ml-auto hidden items-center md:flex">
           <div className="group relative">
             <Search

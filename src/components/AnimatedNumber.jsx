@@ -1,11 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { countTo } from '@/lib/motion'
 
-/**
- * GSAP-driven counter. Starts when the element first scrolls into view and
- * re-runs whenever `value` changes, so a stat tile visibly rolls to its new
- * figure after an approval draws down stock.
- */
 export default function AnimatedNumber({
   value = 0,
   format = (n) => Math.round(n).toLocaleString('id-ID'),
@@ -32,7 +27,7 @@ export default function AnimatedNumber({
       return () => tween?.kill()
     }
 
-    // First render: wait until the tile is actually on screen.
+    // render pertama, tunggu sampai elemennya kelihatan dulu
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {

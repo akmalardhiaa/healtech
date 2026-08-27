@@ -11,12 +11,6 @@ const accents = {
   danger: { ring: 'ring-danger/25', chip: 'bg-danger-soft text-danger-ink', bar: 'bg-danger' },
 }
 
-/**
- * KPI tile with a pointer-tracked spotlight and a 3D tilt.
- *
- * The tilt is driven by springs rather than CSS transitions so it settles
- * naturally instead of snapping back when the pointer leaves.
- */
 export default function StatCard({
   icon: Icon,
   label,
@@ -31,10 +25,9 @@ export default function StatCard({
   const ref = useRef(null)
   const a = accents[accent] ?? accents.primary
 
-  // Raw pointer position, in element-local coordinates.
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
-  // Tilt, springed for weight.
+  // pakai spring biar berhentinya halus
   const rx = useSpring(useMotionValue(0), { stiffness: 260, damping: 24 })
   const ry = useSpring(useMotionValue(0), { stiffness: 260, damping: 24 })
 
@@ -48,7 +41,6 @@ export default function StatCard({
     const y = e.clientY - r.top
     mx.set(x)
     my.set(y)
-    // Map cursor offset from centre to a shallow ±5° tilt.
     ry.set(((x - r.width / 2) / r.width) * 10)
     rx.set((-(y - r.height / 2) / r.height) * 10)
   }
@@ -70,15 +62,12 @@ export default function StatCard({
       whileHover={{ y: -5 }}
       transition={{ type: 'spring', stiffness: 380, damping: 26 }}
       className={clsx(
-        // No `.reveal` here: this is a Framer component and owns its own
-        // transform (the tilt springs). Letting GSAP write to it too would
-        // leave the two libraries fighting over the same inline style.
+        // jangan kasih .reveal di sini, transform-nya sudah dipegang Framer
         'group relative overflow-hidden rounded-2xl border border-line bg-surface p-5',
         'shadow-card ring-1 ring-inset transition-shadow duration-300 hover:shadow-lift',
         a.ring
       )}
     >
-      {/* Cursor spotlight */}
       <motion.div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"

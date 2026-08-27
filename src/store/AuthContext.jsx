@@ -10,13 +10,13 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [booting, setBooting] = useState(true)
 
-  // Restore a session on first paint so a refresh does not bounce to /login.
+  // restore session biar refresh tidak balik ke /login
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(SESSION_KEY)
       if (raw) setUser(JSON.parse(raw))
     } catch {
-      /* ignore unreadable session */
+      // abaikan
     }
     setBooting(false)
   }, [])
@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
     try {
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(u))
     } catch {
-      /* non-fatal */
+      // abaikan
     }
     return u
   }, [])

@@ -43,7 +43,6 @@ const sorts = [
   { key: 'value', label: 'Nilai tertinggi' },
 ]
 
-/** Slim bar showing stock against the unit's minimum buffer. */
 function StockMeter({ stock, minStock }) {
   const level = stockLevel(stock, minStock)
   const pct = Math.min(100, (stock / Math.max(1, minStock * 2)) * 100)
@@ -68,7 +67,6 @@ function StockMeter({ stock, minStock }) {
   )
 }
 
-/** Countdown to expiry, colour-coded by FEFO tier. */
 function ExpiryCell({ iso }) {
   const d = daysUntil(iso)
   const level = expiryLevel(iso)
@@ -280,14 +278,12 @@ export default function ExpiryGuard() {
         description="Pantau sisa umur simpan setiap batch dengan indikator warna otomatis berbasis FEFO, lengkap dengan posisi stok terhadap buffer minimum unit."
       />
 
-      {/* Filter bar */}
       <motion.div
         variants={listVariants(0.05)}
         initial="initial"
         animate="animate"
         className="card flex flex-col gap-4 p-4 lg:flex-row lg:items-center"
       >
-        {/* Search */}
         <motion.div variants={itemVariants} className="relative flex-1">
           <Search
             size={15}
@@ -310,7 +306,6 @@ export default function ExpiryGuard() {
           )}
         </motion.div>
 
-        {/* Level filter */}
         <motion.div
           variants={itemVariants}
           className="flex gap-1 overflow-x-auto rounded-xl bg-elevated p-1 no-scrollbar"
@@ -349,7 +344,6 @@ export default function ExpiryGuard() {
           })}
         </motion.div>
 
-        {/* Sort */}
         <motion.div variants={itemVariants} className="relative">
           <ArrowUpDown
             size={14}
@@ -370,7 +364,6 @@ export default function ExpiryGuard() {
         </motion.div>
       </motion.div>
 
-      {/* Table */}
       <div className="reveal card overflow-hidden">
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
           <h3 className="text-sm font-bold tracking-tight">

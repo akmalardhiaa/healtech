@@ -6,8 +6,7 @@ export const useTheme = () => useContext(ThemeCtx)
 const KEY = 'vitalstock:theme'
 
 export function ThemeProvider({ children }) {
-  // The inline script in index.html has already set the class; read it back so
-  // React's first render agrees with the DOM.
+  // class-nya sudah diset script di index.html, baca balik biar konsisten
   const [dark, setDark] = useState(() =>
     typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true
   )
@@ -17,7 +16,7 @@ export function ThemeProvider({ children }) {
     try {
       localStorage.setItem(KEY, dark ? 'dark' : 'light')
     } catch {
-      /* non-fatal */
+      // abaikan
     }
   }, [dark])
 

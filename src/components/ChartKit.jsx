@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import clsx from 'clsx'
 
-/** Series colours pulled from the theme tokens so charts follow the theme. */
+// warna chart diambil dari token tema biar ikut ganti pas dark/light
 export const chartColors = {
   primary: 'hsl(var(--primary))',
   vital: 'hsl(var(--vital))',
@@ -19,7 +19,6 @@ export const categorical = [
   'hsl(var(--faint))',
 ]
 
-/** Shared axis styling — small, muted, no heavy chrome. */
 export const axisProps = {
   stroke: 'hsl(var(--faint))',
   tick: { fill: 'hsl(var(--muted))', fontSize: 11, fontWeight: 500 },
@@ -27,7 +26,6 @@ export const axisProps = {
   axisLine: false,
 }
 
-/** Themed tooltip that replaces Recharts' default white box. */
 export function ChartTooltip({ active, payload, label, formatter, unit = '' }) {
   if (!active || !payload?.length) return null
 
@@ -60,7 +58,6 @@ export function ChartTooltip({ active, payload, label, formatter, unit = '' }) {
   )
 }
 
-/** Card wrapper with a title row, used by every chart panel. */
 export function ChartCard({ title, subtitle, action, className, children }) {
   return (
     <div className={clsx('reveal card sheen p-5', className)}>
@@ -76,7 +73,6 @@ export function ChartCard({ title, subtitle, action, className, children }) {
   )
 }
 
-/** Small colour key rendered under a chart. */
 export function Legend({ items }) {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">

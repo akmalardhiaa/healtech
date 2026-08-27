@@ -1,12 +1,5 @@
-/**
- * Dummy back-end.
- *
- * Every function returns a Promise and resolves after a small random delay so
- * the UI exercises its real loading states. Mutations are persisted to
- * localStorage, which gives the demo continuity across refreshes without a
- * server. Replacing this file with `fetch` calls is the only change needed to
- * go live — the signatures are already API-shaped.
- */
+// Mock API. Semua fungsi return Promise + delay biar loading state kepakai.
+// Kalau nanti ganti ke API beneran, cukup ubah file ini saja.
 import {
   users,
   medicines,
@@ -28,7 +21,7 @@ function readStore() {
     const raw = localStorage.getItem(STORE_KEY)
     if (raw) return JSON.parse(raw)
   } catch {
-    /* corrupted or unavailable storage — fall through to the seed */
+    // storage rusak / dimatikan, pakai seed saja
   }
   return null
 }
@@ -37,18 +30,18 @@ function writeStore(db) {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify(db))
   } catch {
-    /* private mode / quota — the in-memory copy still works for this session */
+    // private mode atau quota penuh, in-memory masih jalan
   }
 }
 
-// Seed once, then reuse whatever the user has changed.
 let db = readStore() ?? {
   medicines,
   shipments,
   requests: seedRequests,
 }
-// Keep the derived catalogue fresh even for a returning visitor: expiry dates
-// are relative to load time, so re-seed the read-only fields from mockData.
+
+// tanggal expiry dihitung dari waktu load, jadi field read-only-nya
+// di-seed ulang dan cuma stock yang diambil dari localStorage
 db.medicines = medicines.map((m) => {
   const saved = db.medicines?.find((s) => s.id === m.id)
   return saved ? { ...m, stock: saved.stock } : m
@@ -56,8 +49,6 @@ db.medicines = medicines.map((m) => {
 
 const persist = () => writeStore(db)
 const clone = (v) => JSON.parse(JSON.stringify(v))
-
-// --- Auth ------------------------------------------------------------------
 
 export async function login(email, password) {
   await latency(650, 1100)
@@ -74,8 +65,6 @@ export async function login(email, password) {
 }
 
 export const demoAccounts = users.map(({ password: _pw, ...u }) => u)
-
-// --- Reads -----------------------------------------------------------------
 
 export async function getMedicines() {
   await latency()
@@ -105,19 +94,16 @@ export async function getDashboard() {
   })
 }
 
-// --- Mutations -------------------------------------------------------------
-
 export async function decideRequest(id, decision, note = '') {
   await latency(420, 780)
   const req = db.requests.find((r) => r.id === id)
   if (!req) throw new Error(`Permintaan ${id} tidak ditemukan.`)
 
-  req.status = decision // 'approved' | 'rejected'
+  req.status = decision
   req.note = note
   req.decidedAt = 'baru saja'
 
-  // An approved request draws down central stock, which is what makes the
-  // dashboard figures move after a decision.
+  // request yang disetujui mengurangi stok gudang pusat
   if (decision === 'approved') {
     const med = db.medicines.find((m) => m.name === req.medicine)
     if (med) med.stock = Math.max(0, med.stock - req.qty)

@@ -28,7 +28,7 @@ export default function Login() {
   const ecgRef = useRef(null)
   const cardRef = useRef(null)
 
-  // Entrance timeline: brand → copy → form fields → ECG trace.
+  // urutan masuk: brand, teks, field, terakhir garis EKG
   useEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
@@ -43,7 +43,7 @@ export default function Login() {
         )
         .from('.lg-field', { opacity: 0, y: 16, duration: 0.5, stagger: 0.08 }, '-=0.4')
 
-      // The ECG line draws itself, then loops a slow horizontal drift.
+      // setelah kegambar, jalanin loop geser pelan
       const tween = drawPath(ecgRef.current, 2.2, 0.5)
       if (tween) {
         tween.eventCallback('onComplete', () => {
@@ -72,7 +72,6 @@ export default function Login() {
       navigate('/dashboard', { replace: true })
     } catch (err) {
       setError(err.message)
-      // Shake the card so the failure is felt, not just read.
       gsap.fromTo(
         cardRef.current,
         { x: 0 },
@@ -91,7 +90,6 @@ export default function Login() {
 
   return (
     <div ref={scope} className="relative min-h-dvh overflow-hidden bg-canvas">
-      {/* Background: grid + drifting colour blooms */}
       <div aria-hidden className="pointer-events-none absolute inset-0 grid-bg opacity-70" />
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
@@ -107,7 +105,6 @@ export default function Login() {
       </div>
 
       <div className="relative mx-auto grid min-h-dvh w-full max-w-6xl items-center gap-10 px-5 py-10 lg:grid-cols-2 lg:gap-16">
-        {/* --- Narrative column --- */}
         <div className="order-2 lg:order-1">
           <div className="lg-brand mb-8 flex items-center gap-3">
             <span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-primary text-white shadow-[0_10px_30px_-10px_hsl(var(--primary)/1)]">
@@ -142,7 +139,6 @@ export default function Login() {
             mudah diaudit, dan terpantau secara real-time.
           </p>
 
-          {/* ECG trace */}
           <div className="lg-line mt-8 rounded-2xl border border-line bg-surface/60 p-4 backdrop-blur">
             <svg viewBox="0 0 480 90" className="h-[70px] w-full" preserveAspectRatio="none">
               <defs>
@@ -188,7 +184,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* --- Form column --- */}
         <div className="order-1 lg:order-2">
           <div
             ref={cardRef}
@@ -262,9 +257,7 @@ export default function Login() {
                 </motion.p>
               )}
 
-              {/* Framer owns this element's style, so it runs its own
-                  entrance rather than joining the GSAP `.lg-field` stagger —
-                  the delay is tuned to land right after the last field. */}
+              {/* animasinya lewat Framer, bukan ikut stagger .lg-field */}
               <motion.button
                 type="submit"
                 disabled={busy}
@@ -293,7 +286,6 @@ export default function Login() {
               </motion.button>
             </form>
 
-            {/* Demo accounts */}
             <div className="mt-6 border-t border-line pt-5">
               <p className="label">Akun demo · sandi vitalstock</p>
               <div className="mt-2 space-y-1.5">

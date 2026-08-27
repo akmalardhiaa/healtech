@@ -1,137 +1,93 @@
 # VitalStock
 
-**Platform Manajemen Stok & Pelacakan Distribusi Obat**
-Tim SIKATT — HealTech Front-End Code Challenge 2026
+Platform manajemen stok dan pelacakan distribusi obat untuk klinik dan rumah sakit.
 
-VitalStock adalah antarmuka web untuk mengelola stok obat sekaligus melacak alur
-distribusinya secara real-time, menggantikan pencatatan manual yang lambat dan rawan
-kesalahan dengan satu dashboard yang presisi dan mudah diaudit.
+Dibuat oleh **Tim SIKATT** untuk HealTech Front-End Code Challenge 2026.
 
----
+- Akmal Ardhia Irwansyah - UI/UX Designer
+- Jascon Johanest Kembuan - Front-End Developer / Ketua Tim
 
-## Menjalankan proyek
+## Cara menjalankan
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev
 ```
 
-```bash
-npm run build    # bundel produksi ke dist/
-npm run preview  # pratinjau hasil build
-```
+Buka http://localhost:5173
 
-### Akun demo
+Untuk build produksi: `npm run build`, lalu `npm run preview` kalau mau cek hasilnya.
 
-Seluruh akun memakai kata sandi **`vitalstock`**. Tombol akun di halaman login
-mengisi form secara otomatis.
+## Akun demo
 
-| Email | Peran | Hak persetujuan |
-| --- | --- | --- |
-| `admin@vitalstock.id` | Admin Farmasi | ya |
-| `kepala@vitalstock.id` | Kepala Instalasi Farmasi | ya |
-| `staf@vitalstock.id` | Staf Apotek Unit | tidak (hanya memantau) |
+Password semua akun: `vitalstock`
 
-Masuk sebagai Staf Apotek untuk melihat ApprovalFlow dalam mode baca-saja.
+| Email | Peran |
+| --- | --- |
+| admin@vitalstock.id | Admin Farmasi |
+| kepala@vitalstock.id | Kepala Instalasi Farmasi |
+| staf@vitalstock.id | Staf Apotek Unit (tidak bisa approve) |
 
----
+Tinggal klik salah satu akun di halaman login, formnya terisi otomatis.
 
 ## Halaman
 
-| Rute | Nama | Isi |
-| --- | --- | --- |
-| `/login` | Login | Timeline GSAP, garis EKG yang menggambar sendiri, pemilih akun demo |
-| `/dashboard` | **StockPulse** | KPI, tren arus stok, komposisi kategori, permintaan per unit, FEFO, log aktivitas |
-| `/stok` | **ExpiryGuard** | Tabel stok dengan indikator FEFO, pencarian, filter, pengurutan, modal restock |
-| `/distribusi` | **DistribusiTrack** | Peta jalur SVG, rail checkpoint, kartu pengiriman, rantai dingin |
-| `/approval` | **ApprovalFlow** | Persetujuan/penolakan permintaan obat dengan catatan keputusan |
-
----
+- `/login`
+- `/dashboard` - StockPulse, ringkasan stok dan grafik tren
+- `/stok` - ExpiryGuard, tabel stok dengan indikator FEFO
+- `/distribusi` - DistribusiTrack, peta jalur dan status pengiriman
+- `/approval` - ApprovalFlow, persetujuan permintaan obat
 
 ## Tech stack
 
-- **React 18** + **Vite** — SPA dengan `react-router-dom`
-- **Tailwind CSS** — token warna semantik berbasis CSS variable
-- **GSAP** (+ ScrollTrigger) — timeline, reveal saat scroll, penggambaran path SVG, penghitung angka
-- **Framer Motion** — transisi halaman, motion siklus hidup komponen, layout, gesture
-- **Recharts** — Area, Pie, dan Bar chart
-- **lucide-react** — pustaka ikon
+React 18 + Vite, Tailwind CSS, Recharts, lucide-react.
+Animasi pakai GSAP (timeline login, reveal saat scroll, gambar path SVG,
+counter angka) dan Framer Motion (transisi halaman, modal, layout, gesture).
 
-### Pembagian tugas animasi
+Catatan: satu elemen jangan dianimasikan GSAP dan Framer sekaligus, keduanya
+nulis ke inline style yang sama jadi elemennya bisa nyangkut di state awal.
 
-Dua pustaka animasi dipakai untuk peran yang **tidak tumpang tindih**:
-
-- **GSAP** menangani hal imperatif dan berurutan: timeline login, stagger menu
-  samping, penggambaran path SVG, penghitung angka, reveal saat scroll.
-- **Framer Motion** menangani siklus hidup komponen: mount/unmount, transisi
-  halaman, `layoutId`, dan gesture.
-
-> **Aturan penting:** satu elemen hanya boleh dianimasikan oleh **satu** pustaka.
-> Keduanya menulis ke `style` inline yang sama, sehingga elemen yang dianimasikan
-> GSAP *dan* Framer akan tersangkut di state awal dan tampak tidak terlihat.
-> Karena itu komponen `motion.*` tidak pernah diberi kelas `.reveal`.
-
----
-
-## Struktur folder
+## Struktur
 
 ```
 src/
-├── components/     # Reusable: Sidebar, Topbar, StatCard, StatusBadge, ChartKit, Toast…
-├── pages/          # Satu berkas per layar
-├── data/           # mockData.js — satu-satunya sumber data contoh
-├── lib/
-│   ├── api.js      # Backend dummy (Promise + latensi + localStorage)
-│   ├── format.js   # Aturan FEFO/level stok + format angka & rupiah
-│   └── motion.js   # Easing, varian Framer, helper GSAP
-└── store/          # AuthContext, ThemeContext
+  components/   komponen reusable
+  pages/        satu file per halaman
+  data/         mockData.js
+  lib/          api.js, format.js, motion.js
+  store/        AuthContext, ThemeContext
 ```
 
----
+## Data
 
-## Backend dummy
+Belum ada backend, semua data ada di `src/data/mockData.js` dan diakses lewat
+`src/lib/api.js`. Fungsinya dibikin async pakai delay biar loading state-nya
+kepakai, dan perubahan disimpan ke localStorage.
 
-`src/lib/api.js` meniru API sungguhan: setiap fungsi mengembalikan `Promise`,
-selesai setelah jeda acak (agar loading state benar-benar terpakai), dan
-menyimpan perubahan ke `localStorage`.
+Perubahannya nyambung antar halaman. Kalau permintaan di ApprovalFlow
+disetujui, stok gudang pusat ikut berkurang dan kelihatan di ExpiryGuard sama
+dashboard.
 
-```js
-login(email, password)          getDashboard()
-getMedicines()                  getShipments()        getRequests()
-decideRequest(id, decision, note)
-advanceShipment(id)             restock(id, qty)      resetDatabase()
-```
+Kalau nanti mau pakai API beneran tinggal ganti isi `api.js`, komponennya tidak
+perlu diubah karena tidak ada yang import `mockData.js` langsung.
 
-Mutasi saling terhubung — menyetujui permintaan di ApprovalFlow **mengurangi stok
-gudang pusat**, dan angkanya langsung terlihat di ExpiryGuard maupun StockPulse.
-Mengganti berkas ini dengan panggilan `fetch` adalah satu-satunya perubahan yang
-dibutuhkan untuk memakai API sungguhan; tidak ada komponen yang menyentuh
-`mockData.js` secara langsung.
+## Indikator warna (FEFO)
 
----
+Aturannya ada di `src/lib/format.js`.
 
-## Aturan indikator warna (FEFO)
+| Level | Sisa umur | Stok vs minimum |
+| --- | --- | --- |
+| Aman (hijau) | > 90 hari | >= 1.5x |
+| Perhatian (amber) | 31-90 hari | 1 - 1.5x |
+| Kritis (merah) | <= 30 hari | < 1x |
 
-Ditetapkan sekali di `src/lib/format.js` agar badge, tabel, dan grafik tidak
-pernah berbeda pendapat.
+Badge di tiap baris ambil level yang paling parah dari dua kondisi itu.
 
-| Level | Sisa umur simpan | Stok terhadap minimum | Warna |
-| --- | --- | --- | --- |
-| Aman | > 90 hari | ≥ 1,5× | hijau |
-| Perhatian | 31–90 hari | 1–1,5× | amber |
-| Kritis | ≤ 30 hari | < 1× | merah |
+Tanggal kedaluwarsa disimpan sebagai selisih hari dari waktu load, bukan tanggal
+tetap, biar demonya tidak basi kalau dibuka bulan depan.
 
-Badge pada satu baris selalu menampilkan level **terburuk** dari kedua sinyal itu.
+## Lain-lain
 
-Tanggal kedaluwarsa disimpan sebagai selisih hari terhadap waktu muat, bukan
-tanggal tetap, sehingga demo tidak pernah basi.
-
----
-
-## Aksesibilitas
-
-- Mode terang & gelap dengan kontras yang dijaga di kedua tema; pilihan tersimpan
-  di `localStorage` dan diterapkan sebelum paint pertama sehingga tidak berkedip.
-- Seluruh gerak dekoratif dimatikan pada `prefers-reduced-motion: reduce`.
-- Angka memakai *tabular figures* agar rapi saat dibaca dalam kolom.
-- Ikon dekoratif diberi `aria-hidden`, tombol ikon diberi `aria-label`.
+- Ada dark mode, pilihannya disimpan di localStorage
+- Animasi dimatikan otomatis kalau OS-nya set `prefers-reduced-motion`
+- Layout responsif, sidebar jadi drawer di mobile

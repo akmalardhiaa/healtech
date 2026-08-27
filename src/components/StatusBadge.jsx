@@ -19,10 +19,6 @@ const icons = {
   neutral: XCircle,
 }
 
-/**
- * The colour-coded indicator the proposal centres on. `level` maps to the FEFO
- * tiers; a `critical` badge also pulses so it catches the eye on a dense table.
- */
 export default function StatusBadge({ level = 'neutral', label, icon = true, pulse, className }) {
   const Icon = icons[level] ?? icons.neutral
   const text = label ?? levelLabel[level] ?? level

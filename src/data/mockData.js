@@ -1,12 +1,7 @@
-/**
- * Mock dataset for VitalStock.
- *
- * Everything the UI renders originates here. It is deliberately isolated from
- * the components so that swapping in a real API later means rewriting
- * `src/lib/api.js` only — no page or component touches this file directly.
- */
+// Data contoh. Komponen tidak pernah import file ini langsung, semuanya
+// lewat src/lib/api.js.
 
-// --- Accounts (dummy auth) -------------------------------------------------
+// akun demo
 
 export const users = [
   {
@@ -41,15 +36,10 @@ export const users = [
   },
 ]
 
-// --- Master obat -----------------------------------------------------------
-
-/**
- * `expiry` is stored as an offset in days from "today" rather than a fixed
- * date, so the demo never goes stale: the FEFO indicators stay meaningful
- * whenever the project is opened.
- */
+// expiry disimpan sebagai selisih hari dari hari ini, bukan tanggal tetap,
+// biar indikator FEFO-nya tetap masuk akal kapan pun demo dibuka
 const catalogue = [
-  // name, category, unit, stock, minStock, expiryInDays, batch, supplier, price
+  // nama, kategori, satuan, stok, minStok, expiryDalamHari, batch, supplier, harga
   ['Paracetamol 500mg', 'Analgesik', 'Tablet', 4820, 1200, 412, 'PCM-24A', 'PT Kimia Farma', 850],
   ['Amoxicillin 500mg', 'Antibiotik', 'Kapsul', 940, 1000, 168, 'AMX-24C', 'PT Kalbe Farma', 1750],
   ['Ceftriaxone 1g', 'Antibiotik', 'Vial', 148, 200, 54, 'CFT-24B', 'PT Sanbe Farma', 24500],
@@ -94,12 +84,7 @@ export const medicines = catalogue.map(
   })
 )
 
-// --- Distribusi ------------------------------------------------------------
-
-/**
- * A shipment moves through four checkpoints. `stage` is the index of the last
- * checkpoint reached, which is what DistribusiTrack animates along its rail.
- */
+// stage = index checkpoint terakhir yang sudah dilewati
 export const shipmentStages = [
   'Diproses Gudang',
   'Dalam Perjalanan',
@@ -161,7 +146,7 @@ export const shipments = [
     stage: 0,
     priority: 'Reguler',
     eta: '1 jam 20 menit',
-    departedAt: '—',
+    departedAt: '-',
     temperature: '4.0°C',
   },
   {
@@ -193,8 +178,6 @@ export const shipments = [
     temperature: '4.8°C',
   },
 ]
-
-// --- Approval flow ---------------------------------------------------------
 
 export const requests = [
   {
@@ -283,8 +266,6 @@ export const requests = [
   },
 ]
 
-// --- Chart series ----------------------------------------------------------
-
 export const consumptionTrend = [
   { month: 'Feb', masuk: 12400, keluar: 9800, sisa: 41200 },
   { month: 'Mar', masuk: 14200, keluar: 11600, sisa: 43800 },
@@ -312,7 +293,7 @@ export const unitDemand = [
 ]
 
 export const activityFeed = [
-  { id: 1, type: 'danger', text: 'Ampicillin 1g memasuki status kritis — sisa 19 hari.', time: '4 mnt' },
+  { id: 1, type: 'danger', text: 'Ampicillin 1g memasuki status kritis, sisa 19 hari.', time: '4 mnt' },
   { id: 2, type: 'primary', text: 'SHP-20482 berangkat menuju Depo IGD.', time: '12 mnt' },
   { id: 3, type: 'warn', text: 'Permintaan REQ-3391 menunggu persetujuan.', time: '18 mnt' },
   { id: 4, type: 'vital', text: 'SHP-20483 diterima & diverifikasi Apotek Rawat Jalan.', time: '41 mnt' },

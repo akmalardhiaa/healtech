@@ -8,7 +8,6 @@ import DistribusiTrack from '@/pages/DistribusiTrack'
 import ApprovalFlow from '@/pages/ApprovalFlow'
 import { useAuth } from '@/store/AuthContext'
 
-/** Blocks the shell until a session exists. */
 function RequireAuth({ children }) {
   const { user, booting } = useAuth()
   const location = useLocation()
@@ -25,13 +24,8 @@ function RequireAuth({ children }) {
   return children
 }
 
-/**
- * Note: there is deliberately no <AnimatePresence> here. The page transition
- * lives in AppLayout, keyed on the pathname. Wrapping <Routes> in a second
- * mode="wait" presence nests two presence trackers that both react to the same
- * navigation, and the inner one then paints the *entering* page with the
- * outgoing page's exit styles — leaving the route blank.
- */
+// transisi halaman ada di AppLayout, jangan bungkus Routes pakai
+// AnimatePresence lagi (halaman jadi blank)
 export default function App() {
   const { user } = useAuth()
 

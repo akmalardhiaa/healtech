@@ -33,7 +33,6 @@ function NavRow({ item, onNavigate }) {
             isActive ? 'text-primary-ink' : 'text-muted hover:text-ink'
           )}
         >
-          {/* The active pill slides between items via a shared layoutId. */}
           {isActive && (
             <motion.div
               layoutId="nav-pill"
@@ -75,7 +74,6 @@ function SidebarBody({ onNavigate }) {
   const { user, logout } = useAuth()
   const scope = useRef(null)
 
-  // One-off stagger of the nav rows when the shell mounts.
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.from('.nav-row', {
@@ -92,7 +90,6 @@ function SidebarBody({ onNavigate }) {
 
   return (
     <div ref={scope} className="flex h-full flex-col gap-6 p-4">
-      {/* Brand */}
       <div className="flex items-center gap-2.5 px-1 pt-1">
         <motion.span
           className="relative grid h-9 w-9 place-items-center rounded-xl bg-primary text-white shadow-[0_8px_22px_-8px_hsl(var(--primary)/1)]"
@@ -110,14 +107,12 @@ function SidebarBody({ onNavigate }) {
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="flex flex-col gap-1">
         {navItems.map((item) => (
           <NavRow key={item.to} item={item} onNavigate={onNavigate} />
         ))}
       </nav>
 
-      {/* Live status card */}
       <div className="relative mt-auto overflow-hidden rounded-2xl border border-line bg-elevated p-3.5">
         <div
           aria-hidden
@@ -137,7 +132,6 @@ function SidebarBody({ onNavigate }) {
         </p>
       </div>
 
-      {/* User */}
       <div className="flex items-center gap-2.5 rounded-2xl border border-line bg-surface p-2.5">
         <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-bold text-primary-ink">
           {user?.initials}
@@ -164,7 +158,7 @@ function SidebarBody({ onNavigate }) {
 export default function Sidebar({ open, onClose }) {
   const location = useLocation()
 
-  // Close the mobile drawer whenever the route changes.
+  // tutup drawer tiap pindah halaman
   useEffect(() => {
     onClose?.()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -172,12 +166,10 @@ export default function Sidebar({ open, onClose }) {
 
   return (
     <>
-      {/* Desktop rail */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r border-line bg-surface lg:block">
         <SidebarBody />
       </aside>
 
-      {/* Mobile drawer */}
       <AnimatePresence>
         {open && (
           <>

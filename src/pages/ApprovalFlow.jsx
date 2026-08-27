@@ -155,7 +155,6 @@ function RequestCard({ req, onDecide, canApprove }) {
         urgent && pending && 'ring-1 ring-inset ring-danger/25'
       )}
     >
-      {/* Priority stripe */}
       <span
         aria-hidden
         className={clsx(
@@ -351,7 +350,6 @@ export default function ApprovalFlow() {
         </motion.div>
       )}
 
-      {/* Tabs */}
       <div className="flex gap-1 overflow-x-auto rounded-xl bg-elevated p-1 no-scrollbar">
         {tabs.map((t) => {
           const active = tab === t.key

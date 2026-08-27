@@ -55,7 +55,6 @@ export default function Dashboard() {
     }
   }, [])
 
-  // Attach scroll reveals once the real content has replaced the skeletons.
   useEffect(() => {
     if (!data) return
     const ctx = revealOnScroll(scope)
@@ -83,7 +82,7 @@ export default function Dashboard() {
     return 'Selamat malam'
   }, [])
 
-  // Rows for the "perlu perhatian" panel — worst expiry first.
+  // panel perlu perhatian, urut dari yang paling dekat kedaluwarsa
   const attention = useMemo(() => {
     if (!data) return []
     return [...data.medicines]
@@ -126,7 +125,6 @@ export default function Dashboard() {
         }
       />
 
-      {/* --- KPI row --- */}
       <motion.div
         variants={listVariants(0.07)}
         initial="initial"
@@ -172,7 +170,6 @@ export default function Dashboard() {
         />
       </motion.div>
 
-      {/* --- Trend + mix --- */}
       <div className="grid gap-4 lg:grid-cols-3">
         <ChartCard
           className="lg:col-span-2"
@@ -200,8 +197,7 @@ export default function Dashboard() {
 
                 <CartesianGrid strokeDasharray="3 6" stroke={chartColors.line} vertical={false} />
                 <XAxis dataKey="month" {...axisProps} />
-                {/* Rounded to whole thousands: "13.5rb" overflows the gutter
-                    and gets clipped to a misleading "3.5rb". */}
+                {/* dibulatkan ke ribuan, kalau tidak labelnya kepotong */}
                 <YAxis
                   {...axisProps}
                   width={58}
@@ -282,7 +278,6 @@ export default function Dashboard() {
         </ChartCard>
       </div>
 
-      {/* --- Demand + attention + feed --- */}
       <div className="grid gap-4 lg:grid-cols-3">
         <ChartCard title="Permintaan per unit" subtitle="Jumlah permintaan obat bulan berjalan">
           <div className="h-[260px] w-full">
@@ -311,12 +306,11 @@ export default function Dashboard() {
           </div>
         </ChartCard>
 
-        {/* Perlu perhatian */}
         <div className="reveal card overflow-hidden">
           <div className="flex items-center justify-between border-b border-line p-5">
             <div>
               <h3 className="text-sm font-bold tracking-tight">Perlu perhatian</h3>
-              <p className="mt-0.5 text-xs text-faint">Urutan FEFO — kedaluwarsa terdekat</p>
+              <p className="mt-0.5 text-xs text-faint">Urutan FEFO, kedaluwarsa terdekat</p>
             </div>
             <Link
               to="/stok"
@@ -365,7 +359,6 @@ export default function Dashboard() {
           </motion.ul>
         </div>
 
-        {/* Activity feed */}
         <div className="reveal card overflow-hidden">
           <div className="border-b border-line p-5">
             <h3 className="text-sm font-bold tracking-tight">Aktivitas sistem</h3>
@@ -378,7 +371,6 @@ export default function Dashboard() {
             animate="animate"
             className="relative space-y-4 p-5"
           >
-            {/* Timeline rail */}
             <span aria-hidden className="absolute bottom-6 left-[26px] top-7 w-px bg-line" />
 
             {data.activityFeed.map((a) => (
@@ -401,7 +393,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* --- Status strip --- */}
       <div className="reveal card flex flex-wrap items-center gap-x-6 gap-y-3 p-5">
         <p className="text-xs font-bold uppercase tracking-wider text-muted">Kunci indikator</p>
         <StatusBadge level="safe" label="Aman · > 90 hari" />

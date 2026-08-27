@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion'
 import { itemVariants } from '@/lib/motion'
 
-/** Consistent title block for every route, with a word-by-word entrance. */
 export default function PageHeader({ eyebrow, title, description, actions }) {
   const words = String(title).split(' ')
 
