@@ -508,6 +508,35 @@ export default function ExpiryGuard() {
                             <p className="truncate text-[10px] text-faint">
                               {m.batch} · {m.supplier}
                             </p>
+
+                            {/* di layar kecil kolom kanan harus digeser dulu,
+                                jadi dua angka terpenting diringkas di sini */}
+                            <p className="mt-1 flex flex-wrap gap-x-2 text-[10px] font-semibold lg:hidden">
+                              <span
+                                className={clsx(
+                                  expiryLevel(m.expiry) === 'critical'
+                                    ? 'text-danger-ink'
+                                    : expiryLevel(m.expiry) === 'warning'
+                                      ? 'text-warn-ink'
+                                      : 'text-muted'
+                                )}
+                              >
+                                exp {daysUntil(m.expiry)} hari
+                              </span>
+                              {daysToStockout(m) !== null && (
+                                <span
+                                  className={clsx(
+                                    stockoutLevel(m) === 'critical'
+                                      ? 'text-danger-ink'
+                                      : stockoutLevel(m) === 'warning'
+                                        ? 'text-warn-ink'
+                                        : 'text-muted'
+                                  )}
+                                >
+                                  habis ±{daysToStockout(m)} hari
+                                </span>
+                              )}
+                            </p>
                           </div>
                         </div>
                       </td>
