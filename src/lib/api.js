@@ -5,6 +5,7 @@ import {
   medicines,
   shipments,
   requests as seedRequests,
+  movements as seedMovements,
   consumptionTrend,
   categoryMix,
   unitDemand,
@@ -38,6 +39,7 @@ let db = readStore() ?? {
   medicines,
   shipments,
   requests: seedRequests,
+  movements: seedMovements,
 }
 
 // tanggal expiry dihitung dari waktu load, jadi field read-only-nya
@@ -46,6 +48,8 @@ db.medicines = medicines.map((m) => {
   const saved = db.medicines?.find((s) => s.id === m.id)
   return saved ? { ...m, stock: saved.stock } : m
 })
+
+if (!db.movements) db.movements = seedMovements
 
 const persist = () => writeStore(db)
 const clone = (v) => JSON.parse(JSON.stringify(v))
@@ -94,6 +98,25 @@ export async function getDashboard() {
   })
 }
 
+export async function getMovements(medId) {
+  await latency(220, 480)
+  return clone(db.movements[medId] ?? [])
+}
+
+// tiap perubahan stok dicatat di kartu stok, saldonya ikut jalan
+function catat(med, type, qty, ref, pihak) {
+  const rows = db.movements[med.id] ?? (db.movements[med.id] = [])
+  rows.unshift({
+    id: `${med.id}-MV${Date.now()}`,
+    type,
+    qty,
+    saldo: med.stock,
+    ref,
+    pihak,
+    at: new Date().toISOString(),
+  })
+}
+
 export async function decideRequest(id, decision, note = '') {
   await latency(420, 780)
   const req = db.requests.find((r) => r.id === id)
@@ -106,7 +129,10 @@ export async function decideRequest(id, decision, note = '') {
   // request yang disetujui mengurangi stok gudang pusat
   if (decision === 'approved') {
     const med = db.medicines.find((m) => m.name === req.medicine)
-    if (med) med.stock = Math.max(0, med.stock - req.qty)
+    if (med) {
+      med.stock = Math.max(0, med.stock - req.qty)
+      catat(med, 'keluar', req.qty, req.id, req.unitName)
+    }
   }
 
   persist()
@@ -128,11 +154,12 @@ export async function restock(id, qty) {
   const med = db.medicines.find((m) => m.id === id)
   if (!med) throw new Error(`Obat ${id} tidak ditemukan.`)
   med.stock += qty
+  catat(med, 'masuk', qty, `PO-${Date.now().toString().slice(-4)}`, med.supplier)
   persist()
   return clone(med)
 }
 
 export function resetDatabase() {
-  db = { medicines, shipments, requests: seedRequests }
+  db = { medicines, shipments, requests: seedRequests, movements: seedMovements }
   persist()
 }

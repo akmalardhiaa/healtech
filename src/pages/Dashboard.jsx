@@ -21,6 +21,7 @@ import {
   ClipboardCheck,
   Package,
   Truck,
+  TrendingDown,
   Wallet,
 } from 'lucide-react'
 import clsx from 'clsx'
@@ -31,7 +32,15 @@ import StatusBadge from '@/components/StatusBadge'
 import { SkeletonCard, SkeletonChart } from '@/components/Skeleton'
 import { ChartCard, ChartTooltip, Legend, axisProps, categorical, chartColors } from '@/components/ChartKit'
 import { getDashboard } from '@/lib/api'
-import { expiryLevel, daysUntil, num, rupiahShort, overallLevel } from '@/lib/format'
+import {
+  daysToStockout,
+  daysUntil,
+  expiryLevel,
+  num,
+  overallLevel,
+  rupiahShort,
+  stockoutLevel,
+} from '@/lib/format'
 import { itemVariants, listVariants, revealOnScroll } from '@/lib/motion'
 import { useAuth } from '@/store/AuthContext'
 
@@ -88,6 +97,15 @@ export default function Dashboard() {
     return [...data.medicines]
       .sort((a, b) => daysUntil(a.expiry) - daysUntil(b.expiry))
       .slice(0, 6)
+  }, [data])
+
+  // obat yang paling cepat habis kalau laju pakainya tetap
+  const segeraHabis = useMemo(() => {
+    if (!data) return []
+    return [...data.medicines]
+      .filter((m) => stockoutLevel(m) !== 'safe')
+      .sort((a, b) => (daysToStockout(a) ?? 1e9) - (daysToStockout(b) ?? 1e9))
+      .slice(0, 5)
   }, [data])
 
   if (!data || !stats) {
@@ -391,6 +409,75 @@ export default function Dashboard() {
             ))}
           </motion.ol>
         </div>
+      </div>
+
+      <div className="reveal card overflow-hidden">
+        <div className="flex items-center justify-between gap-3 border-b border-line p-5">
+          <div>
+            <h3 className="flex items-center gap-2 text-sm font-bold tracking-tight">
+              <TrendingDown size={15} className="text-warn" strokeWidth={2.5} />
+              Perlu dipesan segera
+            </h3>
+            <p className="mt-0.5 text-xs text-faint">
+              Perkiraan habis berdasarkan rata-rata pemakaian harian
+            </p>
+          </div>
+          <Link
+            to="/stok"
+            className="text-[11px] font-bold text-primary transition-colors hover:text-primary-ink"
+          >
+            Kelola stok
+          </Link>
+        </div>
+
+        {segeraHabis.length === 0 ? (
+          <p className="p-8 text-center text-xs text-muted">
+            Tidak ada obat yang diperkirakan habis dalam waktu dekat.
+          </p>
+        ) : (
+          <motion.ul
+            variants={listVariants(0.055)}
+            initial="initial"
+            animate="animate"
+            className="divide-y divide-line"
+          >
+            {segeraHabis.map((m) => {
+              const sisa = daysToStockout(m)
+              const lvl = stockoutLevel(m)
+              const persen = Math.max(4, Math.min(100, (sisa / 30) * 100))
+              return (
+                <motion.li key={m.id} variants={itemVariants} className="px-5 py-3">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <p className="truncate text-xs font-bold">{m.name}</p>
+                    <p
+                      className={clsx(
+                        'shrink-0 text-xs font-extrabold tnum',
+                        lvl === 'critical' ? 'text-danger-ink' : 'text-warn-ink'
+                      )}
+                    >
+                      ± {sisa} hari
+                    </p>
+                  </div>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line/70">
+                    <motion.div
+                      className={clsx(
+                        'h-full rounded-full',
+                        lvl === 'critical' ? 'bg-danger' : 'bg-warn'
+                      )}
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${persen}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                    />
+                  </div>
+                  <p className="mt-1 text-[10px] text-faint">
+                    sisa {num(m.stock)} {m.unit.toLowerCase()} · pakai {m.dailyUsage}/hari
+                  </p>
+                </motion.li>
+              )
+            })}
+          </motion.ul>
+        )}
       </div>
 
       <div className="reveal card flex flex-wrap items-center gap-x-6 gap-y-3 p-5">

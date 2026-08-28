@@ -15,6 +15,7 @@ import {
 import clsx from 'clsx'
 
 import PageHeader from '@/components/PageHeader'
+import Portal from '@/components/Portal'
 import StatusBadge from '@/components/StatusBadge'
 import { SkeletonTable } from '@/components/Skeleton'
 import { decideRequest, getRequests } from '@/lib/api'
@@ -48,6 +49,7 @@ function DecisionModal({ req, decision, onClose, onConfirm }) {
   }
 
   return (
+    <Portal>
     <motion.div
       className="fixed inset-0 z-[70] grid place-items-center bg-black/55 p-4 backdrop-blur-sm"
       initial={{ opacity: 0 }}
@@ -135,6 +137,7 @@ function DecisionModal({ req, decision, onClose, onConfirm }) {
         </div>
       </motion.form>
     </motion.div>
+    </Portal>
   )
 }
 

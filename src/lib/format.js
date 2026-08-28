@@ -25,6 +25,28 @@ export function overallLevel(med) {
   return order[a] >= order[b] ? a : b
 }
 
+// Perkiraan berapa hari lagi stok habis kalau laju pakainya tetap.
+// null artinya obat ini tidak terpakai sama sekali, jadi tidak bisa diprediksi.
+export function daysToStockout(med) {
+  if (!med.dailyUsage || med.dailyUsage <= 0) return null
+  return Math.floor(med.stock / med.dailyUsage)
+}
+
+// <= 7 hari harus dipesan hari ini, <= 21 hari masuk rencana pemesanan
+export function stockoutLevel(med) {
+  const d = daysToStockout(med)
+  if (d === null) return 'safe'
+  if (d <= 7) return 'critical'
+  if (d <= 21) return 'warning'
+  return 'safe'
+}
+
+// tanggal perkiraan habis, untuk ditampilkan di samping jumlah hari
+export function stockoutDate(med) {
+  const d = daysToStockout(med)
+  return d === null ? null : new Date(Date.now() + d * DAY).toISOString()
+}
+
 export const levelLabel = {
   safe: 'Aman',
   warning: 'Perhatian',

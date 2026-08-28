@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion'
 import { Bell, Menu, Moon, Search, Sun } from 'lucide-react'
+import CommandPalette from './CommandPalette'
 import clsx from 'clsx'
 import { useTheme } from '@/store/ThemeContext'
 import { navItems } from './Sidebar'
@@ -119,7 +120,19 @@ function NotificationBell() {
 }
 
 export default function Topbar({ onMenu }) {
+  const [cari, setCari] = useState(false)
   const { pathname } = useLocation()
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setCari((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
   const current = navItems.find((n) => pathname.startsWith(n.to))
 
   const { scrollYProgress } = useScroll()
@@ -147,24 +160,32 @@ export default function Topbar({ onMenu }) {
         </div>
 
         <div className="ml-auto hidden items-center md:flex">
-          <div className="group relative">
-            <Search
-              size={15}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint transition-colors group-focus-within:text-primary"
-            />
-            <input
-              type="search"
-              placeholder="Cari obat, batch, unit…"
-              className="w-56 rounded-xl border border-line bg-elevated py-2 pl-9 pr-3 text-sm outline-none transition-all duration-300 placeholder:text-faint focus:w-72 focus:border-primary focus:ring-4 focus:ring-primary/15"
-            />
-          </div>
+          <button
+            onClick={() => setCari(true)}
+            className="group flex w-64 items-center gap-2.5 rounded-xl border border-line bg-elevated px-3 py-2 text-left transition-colors hover:border-primary/40"
+          >
+            <Search size={15} className="shrink-0 text-faint transition-colors group-hover:text-primary" />
+            <span className="flex-1 text-sm text-faint">Cari obat, batch, unit…</span>
+            <kbd className="rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-faint">
+              Ctrl K
+            </kbd>
+          </button>
         </div>
 
         <div className="ml-auto flex items-center gap-2 md:ml-3">
+          <button
+            onClick={() => setCari(true)}
+            className="grid h-9 w-9 place-items-center rounded-xl border border-line bg-surface text-muted transition-colors hover:text-ink md:hidden"
+            aria-label="Cari"
+          >
+            <Search size={16} strokeWidth={2.3} />
+          </button>
           <NotificationBell />
           <ThemeToggle />
         </div>
       </div>
+
+      <CommandPalette open={cari} onClose={() => setCari(false)} />
     </header>
   )
 }

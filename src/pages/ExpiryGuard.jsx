@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowUpDown,
   Boxes,
   Filter,
+  Download,
   PackagePlus,
   Search,
+  TrendingDown,
   ShieldAlert,
   Timer,
   X,
@@ -13,11 +16,15 @@ import {
 import clsx from 'clsx'
 
 import PageHeader from '@/components/PageHeader'
+import Portal from '@/components/Portal'
 import StatusBadge from '@/components/StatusBadge'
 import { SkeletonTable } from '@/components/Skeleton'
+import StockCard from '@/components/StockCard'
+import { downloadCSV, stamp, toCSV } from '@/lib/export'
 import { getMedicines, restock } from '@/lib/api'
 import {
   dateID,
+  daysToStockout,
   daysUntil,
   expiryLevel,
   levelLabel,
@@ -25,6 +32,7 @@ import {
   overallLevel,
   rupiah,
   stockLevel,
+  stockoutLevel,
 } from '@/lib/format'
 import { itemVariants, listVariants, modalVariants, revealOnScroll, rowVariants } from '@/lib/motion'
 import { useToast } from '@/components/Toast'
@@ -41,6 +49,7 @@ const sorts = [
   { key: 'stock', label: 'Stok tersedikit' },
   { key: 'name', label: 'Nama A–Z' },
   { key: 'value', label: 'Nilai tertinggi' },
+  { key: 'habis', label: 'Paling cepat habis' },
 ]
 
 function StockMeter({ stock, minStock }) {
@@ -81,6 +90,22 @@ function ExpiryCell({ iso }) {
   )
 }
 
+function StockoutCell({ med }) {
+  const d = daysToStockout(med)
+  const level = stockoutLevel(med)
+  if (d === null) return <span className="text-[11px] text-faint">—</span>
+
+  const tone =
+    level === 'critical' ? 'text-danger-ink' : level === 'warning' ? 'text-warn-ink' : 'text-muted'
+
+  return (
+    <div className="leading-tight">
+      <p className={clsx('text-xs font-extrabold tnum', tone)}>± {d} hari</p>
+      <p className="text-[10px] text-faint">{med.dailyUsage}/hari</p>
+    </div>
+  )
+}
+
 function RestockModal({ med, onClose, onDone }) {
   const [qty, setQty] = useState(Math.max(100, med.minStock))
   const [busy, setBusy] = useState(false)
@@ -107,6 +132,7 @@ function RestockModal({ med, onClose, onDone }) {
   }
 
   return (
+    <Portal>
     <motion.div
       className="fixed inset-0 z-[70] grid place-items-center bg-black/55 p-4 backdrop-blur-sm"
       initial={{ opacity: 0 }}
@@ -196,6 +222,7 @@ function RestockModal({ med, onClose, onDone }) {
         </div>
       </motion.form>
     </motion.div>
+    </Portal>
   )
 }
 
@@ -205,7 +232,21 @@ export default function ExpiryGuard() {
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('expiry')
   const [target, setTarget] = useState(null)
+  const [kartu, setKartu] = useState(null)
+  const toast = useToast()
+  const [params, setParams] = useSearchParams()
   const scope = useRef(null)
+
+  // command palette mengirim kata kunci lewat ?q=
+  useEffect(() => {
+    const dari = params.get('q')
+    if (dari) {
+      setQuery(dari)
+      params.delete('q')
+      setParams(params, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     let alive = true
@@ -253,9 +294,32 @@ export default function ExpiryGuard() {
       stock: (a, b) => a.stock / a.minStock - b.stock / b.minStock,
       name: (a, b) => a.name.localeCompare(b.name),
       value: (a, b) => b.stock * b.price - a.stock * a.price,
+      habis: (a, b) => (daysToStockout(a) ?? 1e9) - (daysToStockout(b) ?? 1e9),
     }
     return out.sort(by[sort])
   }, [meds, query, filter, sort])
+
+  function eksporCSV() {
+    const kolom = [
+      { label: 'Nama obat', value: (m) => m.name },
+      { label: 'Batch', value: (m) => m.batch },
+      { label: 'Kategori', value: (m) => m.category },
+      { label: 'Satuan', value: (m) => m.unit },
+      { label: 'Stok', value: (m) => m.stock },
+      { label: 'Stok minimum', value: (m) => m.minStock },
+      { label: 'Pakai per hari', value: (m) => m.dailyUsage },
+      { label: 'Prediksi habis (hari)', value: (m) => daysToStockout(m) ?? '' },
+      { label: 'Sisa umur (hari)', value: (m) => daysUntil(m.expiry) },
+      { label: 'Kedaluwarsa', value: (m) => dateID(m.expiry) },
+      { label: 'Lokasi', value: (m) => m.location },
+      { label: 'Supplier', value: (m) => m.supplier },
+      { label: 'Harga satuan', value: (m) => m.price },
+      { label: 'Nilai persediaan', value: (m) => m.stock * m.price },
+      { label: 'Status', value: (m) => levelLabel[overallLevel(m)] },
+    ]
+    downloadCSV(`stok-obat-${stamp()}.csv`, toCSV(kolom, rows))
+    toast.success(`${rows.length} baris diekspor ke CSV.`)
+  }
 
   function applyRestock(updated) {
     setMeds((prev) => prev.map((m) => (m.id === updated.id ? { ...m, stock: updated.stock } : m)))
@@ -372,16 +436,28 @@ export default function ExpiryGuard() {
               {rows.length}
             </span>
           </h3>
-          <p className="hidden text-[11px] text-faint sm:block">
-            Diurutkan: {sorts.find((s) => s.key === sort)?.label}
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="hidden text-[11px] text-faint sm:block">
+              Diurutkan: {sorts.find((s) => s.key === sort)?.label}
+            </p>
+            <motion.button
+              onClick={eksporCSV}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              disabled={!rows.length}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[11px] font-bold text-muted transition-colors hover:border-primary/40 hover:text-primary-ink disabled:opacity-40"
+            >
+              <Download size={13} strokeWidth={2.4} />
+              Ekspor CSV
+            </motion.button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[880px] border-collapse text-left">
             <thead>
               <tr className="border-b border-line bg-elevated/60">
-                {['Obat', 'Kategori', 'Stok / minimum', 'Sisa umur', 'Lokasi', 'Nilai', 'Status', ''].map(
+                {['Obat', 'Kategori', 'Stok / minimum', 'Sisa umur', 'Prediksi habis', 'Lokasi', 'Nilai', 'Status', ''].map(
                   (h) => (
                     <th
                       key={h}
@@ -411,7 +487,9 @@ export default function ExpiryGuard() {
                       initial="initial"
                       animate="animate"
                       exit="exit"
-                      className="group transition-colors hover:bg-elevated/70"
+                      onClick={() => setKartu(m)}
+                      className="group cursor-pointer transition-colors hover:bg-elevated/70"
+                      title="Lihat kartu stok"
                     >
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
@@ -448,6 +526,10 @@ export default function ExpiryGuard() {
                         <ExpiryCell iso={m.expiry} />
                       </td>
 
+                      <td className="px-5 py-3.5">
+                        <StockoutCell med={m} />
+                      </td>
+
                       <td className="px-5 py-3.5 text-[11px] text-muted">{m.location}</td>
 
                       <td className="px-5 py-3.5 text-[11px] font-semibold tnum text-muted">
@@ -460,7 +542,10 @@ export default function ExpiryGuard() {
 
                       <td className="px-5 py-3.5 text-right">
                         <motion.button
-                          onClick={() => setTarget(m)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setTarget(m)
+                          }}
                           whileHover={{ scale: 1.06 }}
                           whileTap={{ scale: 0.94 }}
                           className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[11px] font-bold text-muted opacity-0 transition-all duration-200 hover:border-primary/40 hover:text-primary-ink focus-visible:opacity-100 group-hover:opacity-100"
@@ -497,6 +582,15 @@ export default function ExpiryGuard() {
       <AnimatePresence>
         {target && (
           <RestockModal med={target} onClose={() => setTarget(null)} onDone={applyRestock} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {kartu && (
+          <StockCard
+            med={meds.find((m) => m.id === kartu.id) ?? kartu}
+            onClose={() => setKartu(null)}
+          />
         )}
       </AnimatePresence>
     </div>
