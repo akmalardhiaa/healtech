@@ -13,16 +13,19 @@ import {
 } from 'lucide-react'
 import { gsap } from '@/lib/motion'
 import { useAuth } from '@/store/AuthContext'
+import { useLang } from '@/store/LangContext'
 
+// label produk tidak diterjemahkan, keterangannya iya
 export const navItems = [
-  { to: '/dashboard', label: 'StockPulse', hint: 'Dashboard utama', icon: LayoutDashboard },
-  { to: '/stok', label: 'ExpiryGuard', hint: 'Manajemen stok', icon: PackageSearch },
-  { to: '/distribusi', label: 'DistribusiTrack', hint: 'Pelacakan logistik', icon: Truck },
-  { to: '/approval', label: 'ApprovalFlow', hint: 'Persetujuan obat', icon: ClipboardCheck },
+  { to: '/dashboard', label: 'StockPulse', hint: 'nav.dashboard', icon: LayoutDashboard },
+  { to: '/stok', label: 'ExpiryGuard', hint: 'nav.stok', icon: PackageSearch },
+  { to: '/distribusi', label: 'DistribusiTrack', hint: 'nav.distribusi', icon: Truck },
+  { to: '/approval', label: 'ApprovalFlow', hint: 'nav.approval', icon: ClipboardCheck },
 ]
 
 function NavRow({ item, onNavigate }) {
   const Icon = item.icon
+  const { t } = useLang()
   return (
     <NavLink to={item.to} onClick={onNavigate} className="block">
       {({ isActive }) => (
@@ -54,7 +57,7 @@ function NavRow({ item, onNavigate }) {
 
           <span className="relative min-w-0">
             <span className="block truncate text-sm font-semibold leading-tight">{item.label}</span>
-            <span className="block truncate text-[11px] leading-tight text-faint">{item.hint}</span>
+            <span className="block truncate text-[11px] leading-tight text-faint">{t(item.hint)}</span>
           </span>
 
           {isActive && (
@@ -72,6 +75,7 @@ function NavRow({ item, onNavigate }) {
 
 function SidebarBody({ onNavigate }) {
   const { user, logout } = useAuth()
+  const { t, td } = useLang()
   const scope = useRef(null)
 
   useEffect(() => {
@@ -101,7 +105,7 @@ function SidebarBody({ onNavigate }) {
         <div className="leading-tight">
           <p className="text-[15px] font-extrabold tracking-tight">VitalStock</p>
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
-            Clinical Supply
+            {t('brand.tagline')}
           </p>
         </div>
       </div>
@@ -123,11 +127,11 @@ function SidebarBody({ onNavigate }) {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-vital" />
           </span>
           <p className="text-[11px] font-bold uppercase tracking-wider text-vital-ink">
-            Sinkron real-time
+            {t('sidebar.sinkron')}
           </p>
         </div>
         <p className="relative mt-1.5 text-[11px] leading-relaxed text-muted">
-          Data gudang pusat &amp; 5 unit apotek terhubung.
+          {t('sidebar.sinkronIsi')}
         </p>
       </div>
 
@@ -137,15 +141,15 @@ function SidebarBody({ onNavigate }) {
         </div>
         <div className="min-w-0 flex-1 leading-tight">
           <p className="truncate text-xs font-bold">{user?.name}</p>
-          <p className="truncate text-[10px] text-faint">{user?.role}</p>
+          <p className="truncate text-[10px] text-faint">{td('peran', user?.role)}</p>
         </div>
         <motion.button
           onClick={logout}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.92 }}
           className="grid h-8 w-8 place-items-center rounded-lg text-muted transition-colors hover:bg-danger-soft hover:text-danger-ink"
-          aria-label="Keluar"
-          title="Keluar"
+          aria-label={t('umum.keluar')}
+          title={t('umum.keluar')}
         >
           <LogOut size={15} strokeWidth={2.3} />
         </motion.button>
@@ -189,7 +193,7 @@ export default function Sidebar({ open, onClose }) {
               <button
                 onClick={onClose}
                 className="absolute right-3 top-4 z-10 grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-elevated"
-                aria-label="Tutup menu"
+                aria-label={t('topbar.tutupMenu')}
               >
                 <X size={16} strokeWidth={2.5} />
               </button>

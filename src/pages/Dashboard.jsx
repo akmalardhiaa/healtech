@@ -43,6 +43,7 @@ import {
 } from '@/lib/format'
 import { itemVariants, listVariants, revealOnScroll } from '@/lib/motion'
 import { useAuth } from '@/store/AuthContext'
+import { useLang } from '@/store/LangContext'
 
 const toneDot = {
   danger: 'bg-danger',
@@ -55,6 +56,7 @@ export default function Dashboard() {
   const [data, setData] = useState(null)
   const scope = useRef(null)
   const { user } = useAuth()
+  const { t, td, lang, locale } = useLang()
 
   useEffect(() => {
     let alive = true
@@ -85,11 +87,11 @@ export default function Dashboard() {
 
   const greeting = useMemo(() => {
     const h = new Date().getHours()
-    if (h < 11) return 'Selamat pagi'
-    if (h < 15) return 'Selamat siang'
-    if (h < 19) return 'Selamat sore'
-    return 'Selamat malam'
-  }, [])
+    if (h < 11) return t('dash.pagi')
+    if (h < 15) return t('dash.siang')
+    if (h < 19) return t('dash.sore')
+    return t('dash.malam')
+  }, [t])
 
   // panel perlu perhatian, urut dari yang paling dekat kedaluwarsa
   const attention = useMemo(() => {
@@ -130,11 +132,11 @@ export default function Dashboard() {
       <PageHeader
         eyebrow="StockPulse"
         title={`${greeting}, ${user?.name?.split(' ')[0] ?? 'Tim'}.`}
-        description="Ringkasan kondisi stok, distribusi, dan permintaan obat hari ini di seluruh unit."
+        description={t('dash.deskripsi')}
         actions={
           <Link to="/approval" className="btn-primary group">
             <ClipboardCheck size={15} strokeWidth={2.4} />
-            {stats.pending} menunggu
+            {t('dash.menungguBtn', { n: stats.pending })}
             <ArrowUpRight
               size={14}
               className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
@@ -151,38 +153,38 @@ export default function Dashboard() {
       >
         <StatCard
           icon={Package}
-          label="Total item obat"
+          label={t('dash.totalItem')}
           value={stats.total}
           delta={4.2}
-          hint={`${num(stats.total * 1240)} unit tersimpan`}
+          hint={t('dash.totalItemHint', { n: num(stats.total * 1240, locale) })}
           accent="primary"
           progress={82}
         />
         <StatCard
           icon={AlertTriangle}
-          label="Perlu tindakan"
+          label={t('dash.perluTindakan')}
           value={stats.critical}
           delta={-11.5}
-          hint={`${stats.expiringSoon} item mendekati kedaluwarsa`}
+          hint={t('dash.perluTindakanHint', { n: stats.expiringSoon })}
           accent="danger"
           progress={(stats.critical / stats.total) * 100}
         />
         <StatCard
           icon={Truck}
-          label="Dalam perjalanan"
+          label={t('dash.dalamPerjalanan')}
           value={stats.inTransit}
           delta={8.1}
-          hint={`${data.shipments.length} pengiriman hari ini`}
+          hint={t('dash.dalamPerjalananHint', { n: data.shipments.length })}
           accent="vital"
           progress={(stats.inTransit / data.shipments.length) * 100}
         />
         <StatCard
           icon={Wallet}
-          label="Nilai persediaan"
+          label={t('dash.nilaiPersediaan')}
           value={stats.value}
-          format={rupiahShort}
+          format={(v) => rupiahShort(v, locale)}
           delta={2.6}
-          hint="Estimasi harga pokok gudang pusat"
+          hint={t('dash.nilaiPersediaanHint')}
           accent="warn"
           progress={68}
         />
@@ -191,8 +193,8 @@ export default function Dashboard() {
       <div className="grid gap-4 lg:grid-cols-3">
         <ChartCard
           className="lg:col-span-2"
-          title="Tren arus stok"
-          subtitle="Perbandingan obat masuk dan keluar selama 7 bulan terakhir"
+          title={t('dash.trenJudul')}
+          subtitle={t('dash.trenSub')}
           action={
             <span className="rounded-full bg-vital-soft px-2.5 py-1 text-[11px] font-bold text-vital-ink">
               +12,4% YoY
@@ -229,7 +231,7 @@ export default function Dashboard() {
                 <Area
                   type="monotone"
                   dataKey="masuk"
-                  name="Masuk"
+                  name={t('dash.obatMasuk')}
                   stroke={chartColors.primary}
                   strokeWidth={2.4}
                   fill="url(#gMasuk)"
@@ -241,7 +243,7 @@ export default function Dashboard() {
                 <Area
                   type="monotone"
                   dataKey="keluar"
-                  name="Keluar"
+                  name={t('dash.obatKeluar')}
                   stroke={chartColors.vital}
                   strokeWidth={2.4}
                   fill="url(#gKeluar)"
@@ -257,13 +259,13 @@ export default function Dashboard() {
 
           <Legend
             items={[
-              { label: 'Obat masuk', color: chartColors.primary },
-              { label: 'Obat keluar', color: chartColors.vital },
+              { label: t('dash.obatMasuk'), color: chartColors.primary },
+              { label: t('dash.obatKeluar'), color: chartColors.vital },
             ]}
           />
         </ChartCard>
 
-        <ChartCard title="Komposisi kategori" subtitle="Distribusi item berdasarkan golongan obat">
+        <ChartCard title={t('dash.komposisiJudul')} subtitle={t('dash.komposisiSub')}>
           <div className="h-[240px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -297,7 +299,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <ChartCard title="Permintaan per unit" subtitle="Jumlah permintaan obat bulan berjalan">
+        <ChartCard title={t('dash.permintaanJudul')} subtitle={t('dash.permintaanSub')}>
           <div className="h-[260px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -307,11 +309,11 @@ export default function Dashboard() {
               >
                 <CartesianGrid strokeDasharray="3 6" stroke={chartColors.line} horizontal={false} />
                 <XAxis type="number" {...axisProps} />
-                <YAxis type="category" dataKey="unit" {...axisProps} width={92} />
+                <YAxis type="category" dataKey="unit" {...axisProps} width={92} tickFormatter={(v) => td('lokasi', v)} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--primary) / 0.06)' }} />
                 <Bar
                   dataKey="permintaan"
-                  name="Permintaan"
+                  name={t('dash.permintaanJudul')}
                   radius={[0, 6, 6, 0]}
                   animationDuration={1300}
                 >
@@ -327,14 +329,14 @@ export default function Dashboard() {
         <div className="reveal card overflow-hidden">
           <div className="flex items-center justify-between border-b border-line p-5">
             <div>
-              <h3 className="text-sm font-bold tracking-tight">Perlu perhatian</h3>
-              <p className="mt-0.5 text-xs text-faint">Urutan FEFO, kedaluwarsa terdekat</p>
+              <h3 className="text-sm font-bold tracking-tight">{t('dash.perhatianJudul')}</h3>
+              <p className="mt-0.5 text-xs text-faint">{t('dash.perhatianSub')}</p>
             </div>
             <Link
               to="/stok"
               className="text-[11px] font-bold text-primary transition-colors hover:text-primary-ink"
             >
-              Lihat semua
+              {t('umum.lihatSemua')}
             </Link>
           </div>
 
@@ -364,12 +366,12 @@ export default function Dashboard() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold">{m.name}</p>
                     <p className="truncate text-[10px] text-faint">
-                      {m.batch} · {m.location}
+                      {m.batch} · {td('lokasi', m.location)}
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="text-xs font-extrabold tnum">{d} hari</p>
-                    <p className="text-[10px] text-faint">sisa umur</p>
+                    <p className="text-xs font-extrabold tnum">{d} {t('umum.hari')}</p>
+                    <p className="text-[10px] text-faint">{t('dash.sisaUmur')}</p>
                   </div>
                 </motion.li>
               )
@@ -379,8 +381,8 @@ export default function Dashboard() {
 
         <div className="reveal card overflow-hidden">
           <div className="border-b border-line p-5">
-            <h3 className="text-sm font-bold tracking-tight">Aktivitas sistem</h3>
-            <p className="mt-0.5 text-xs text-faint">Log perubahan stok &amp; logistik</p>
+            <h3 className="text-sm font-bold tracking-tight">{t('dash.aktivitasJudul')}</h3>
+            <p className="mt-0.5 text-xs text-faint">{t('dash.aktivitasSub')}</p>
           </div>
 
           <motion.ol
@@ -402,8 +404,8 @@ export default function Dashboard() {
                   />
                 </span>
                 <div className="min-w-0 pb-0.5">
-                  <p className="text-xs leading-snug">{a.text}</p>
-                  <p className="mt-0.5 text-[10px] text-faint">{a.time} lalu</p>
+                  <p className="text-xs leading-snug">{lang === 'en' && a.textEn ? a.textEn : a.text}</p>
+                  <p className="mt-0.5 text-[10px] text-faint">{a.time} {t('topbar.lalu')}</p>
                 </div>
               </motion.li>
             ))}
@@ -416,23 +418,23 @@ export default function Dashboard() {
           <div>
             <h3 className="flex items-center gap-2 text-sm font-bold tracking-tight">
               <TrendingDown size={15} className="text-warn" strokeWidth={2.5} />
-              Perlu dipesan segera
+              {t('dash.pesanJudul')}
             </h3>
             <p className="mt-0.5 text-xs text-faint">
-              Perkiraan habis berdasarkan rata-rata pemakaian harian
+              {t('dash.pesanSub')}
             </p>
           </div>
           <Link
             to="/stok"
             className="text-[11px] font-bold text-primary transition-colors hover:text-primary-ink"
           >
-            Kelola stok
+            {t('dash.kelolaStok')}
           </Link>
         </div>
 
         {segeraHabis.length === 0 ? (
           <p className="p-8 text-center text-xs text-muted">
-            Tidak ada obat yang diperkirakan habis dalam waktu dekat.
+            {t('dash.pesanKosong')}
           </p>
         ) : (
           <motion.ul
@@ -455,7 +457,7 @@ export default function Dashboard() {
                         lvl === 'critical' ? 'text-danger-ink' : 'text-warn-ink'
                       )}
                     >
-                      ± {sisa} hari
+                      ± {sisa} {t('umum.hari')}
                     </p>
                   </div>
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line/70">
@@ -471,7 +473,7 @@ export default function Dashboard() {
                     />
                   </div>
                   <p className="mt-1 text-[10px] text-faint">
-                    sisa {num(m.stock)} {m.unit.toLowerCase()} · pakai {m.dailyUsage}/hari
+                    {t('dash.sisa')} {num(m.stock, locale)} {td('satuan', m.unit)} · {t('dash.pakai')} {m.dailyUsage}{t('stok.perHari')}
                   </p>
                 </motion.li>
               )
@@ -481,12 +483,12 @@ export default function Dashboard() {
       </div>
 
       <div className="reveal card flex flex-wrap items-center gap-x-6 gap-y-3 p-5">
-        <p className="text-xs font-bold uppercase tracking-wider text-muted">Kunci indikator</p>
-        <StatusBadge level="safe" label="Aman · > 90 hari" />
-        <StatusBadge level="warning" label="Perhatian · 31–90 hari" />
-        <StatusBadge level="critical" label="Kritis · ≤ 30 hari" />
+        <p className="text-xs font-bold uppercase tracking-wider text-muted">{t('dash.kunciIndikator')}</p>
+        <StatusBadge level="safe" label={t('dash.kunciAman')} />
+        <StatusBadge level="warning" label={t('dash.kunciPerhatian')} />
+        <StatusBadge level="critical" label={t('dash.kunciKritis')} />
         <p className="ml-auto text-[11px] text-faint">
-          Sistem FEFO menandai batch otomatis berdasarkan sisa umur simpan.
+          {t('dash.kunciCatatan')}
         </p>
       </div>
     </div>

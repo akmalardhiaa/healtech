@@ -4,9 +4,11 @@ import { motion } from 'framer-motion'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import { pageVariants } from '@/lib/motion'
+import { useLang } from '@/store/LangContext'
 
 export default function AppLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const { t } = useLang()
   const location = useLocation()
 
   return (
@@ -36,10 +38,9 @@ export default function AppLayout() {
 
         <footer className="border-t border-line px-4 py-6 text-center text-xs text-faint sm:px-6">
           <p>
-            <span className="font-semibold text-muted">VitalStock</span> · Tim SIKATT ·
-            HealTech Front-End Code Challenge 2026
+            <span className="font-semibold text-muted">VitalStock</span> · {t('footer.tim')}
           </p>
-          <p className="mt-1">Data pada demo ini menggunakan mock data sisi klien.</p>
+          <p className="mt-1">{t('footer.mock')}</p>
         </footer>
       </div>
     </div>

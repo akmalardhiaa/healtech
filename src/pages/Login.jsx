@@ -7,10 +7,11 @@ import { gsap, drawPath } from '@/lib/motion'
 import { useAuth } from '@/store/AuthContext'
 import { useToast } from '@/components/Toast'
 import { demoAccounts } from '@/lib/api'
+import { useLang } from '@/store/LangContext'
 
 const highlights = [
-  { icon: ShieldCheck, title: 'FEFO otomatis', body: 'Indikator warna untuk sisa umur simpan tiap batch.' },
-  { icon: Activity, title: 'Pantau real-time', body: 'Tren konsumsi & status logistik dalam satu layar.' },
+  { icon: ShieldCheck, key: 'fefo' },
+  { icon: Activity, key: 'pantau' },
 ]
 
 export default function Login() {
@@ -21,6 +22,7 @@ export default function Login() {
   const [error, setError] = useState('')
 
   const { login } = useAuth()
+  const { t, td } = useLang()
   const toast = useToast()
   const navigate = useNavigate()
 
@@ -68,10 +70,10 @@ export default function Login() {
 
     try {
       const user = await login(email, password)
-      toast.success(`Selamat datang, ${user.name.split(' ')[0]}.`)
+      toast.success(t('login.selamatDatang', { nama: user.name.split(' ')[0] }))
       navigate('/dashboard', { replace: true })
     } catch (err) {
-      setError(err.message)
+      setError(err.code === 'INVALID_CREDENTIALS' ? t('login.salah') : err.message)
       gsap.fromTo(
         cardRef.current,
         { x: 0 },
@@ -113,16 +115,16 @@ export default function Login() {
             <div className="leading-tight">
               <p className="text-lg font-extrabold tracking-tight">VitalStock</p>
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-faint">
-                Clinical Supply Chain
+                {t('brand.tagline')}
               </p>
             </div>
           </div>
 
           <h1 className="lg-line text-4xl font-extrabold leading-[1.08] tracking-tight text-balance sm:text-5xl">
-            Presisi untuk{' '}
+            {t('login.judul1')}{' '}
             <span className="relative inline-block">
               <span className="relative z-10 bg-gradient-to-r from-primary via-primary to-vital bg-clip-text text-transparent">
-                setiap butir obat
+                {t('login.judul2')}
               </span>
               <motion.span
                 className="absolute -bottom-1 left-0 h-[3px] rounded-full bg-gradient-to-r from-primary to-vital"
@@ -134,8 +136,7 @@ export default function Login() {
           </h1>
 
           <p className="lg-line mt-4 max-w-md text-[15px] leading-relaxed text-muted text-balance">
-            Ganti pencatatan manual yang lambat dan rawan salah dengan satu dashboard yang presisi,
-            mudah diaudit, dan terpantau secara real-time.
+            {t('login.deskripsi')}
           </p>
 
           <div className="lg-line mt-8 rounded-2xl border border-line bg-surface/60 p-4 backdrop-blur">
@@ -157,10 +158,10 @@ export default function Login() {
               />
             </svg>
             <div className="mt-2 flex items-center justify-between text-[11px] text-faint">
-              <span className="font-semibold uppercase tracking-wider">Stock pulse</span>
+              <span className="font-semibold uppercase tracking-wider">{t('login.stockPulse')}</span>
               <span className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-vital" />
-                Sistem aktif
+                {t('login.sistemAktif')}
               </span>
             </div>
           </div>
@@ -168,15 +169,15 @@ export default function Login() {
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {highlights.map((h) => (
               <div
-                key={h.title}
+                key={h.key}
                 className="lg-pill flex items-start gap-3 rounded-xl border border-line bg-surface/60 p-3.5 backdrop-blur"
               >
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-vital-soft text-vital-ink">
                   <h.icon size={15} strokeWidth={2.4} />
                 </span>
                 <div className="leading-snug">
-                  <p className="text-xs font-bold">{h.title}</p>
-                  <p className="mt-0.5 text-[11px] text-muted">{h.body}</p>
+                  <p className="text-xs font-bold">{t(`login.${h.key}Judul`)}</p>
+                  <p className="mt-0.5 text-[11px] text-muted">{t(`login.${h.key}Isi`)}</p>
                 </div>
               </div>
             ))}
@@ -188,15 +189,15 @@ export default function Login() {
             ref={cardRef}
             className="lg-card mx-auto w-full max-w-md rounded-3xl border border-line bg-surface/85 p-6 shadow-lift backdrop-blur-xl sm:p-8"
           >
-            <h2 className="text-xl font-extrabold tracking-tight">Masuk ke dashboard</h2>
+            <h2 className="text-xl font-extrabold tracking-tight">{t('login.masukJudul')}</h2>
             <p className="mt-1 text-sm text-muted">
-              Gunakan akun demo di bawah untuk menjelajahi seluruh fitur.
+              {t('login.masukSub')}
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div className="lg-field">
                 <label htmlFor="email" className="label">
-                  Email
+                  {t('login.email')}
                 </label>
                 <div className="relative">
                   <Mail
@@ -218,7 +219,7 @@ export default function Login() {
 
               <div className="lg-field">
                 <label htmlFor="password" className="label">
-                  Kata sandi
+                  {t('login.sandi')}
                 </label>
                 <div className="relative">
                   <Lock
@@ -239,7 +240,7 @@ export default function Login() {
                     type="button"
                     onClick={() => setShow((s) => !s)}
                     className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-faint transition-colors hover:text-ink"
-                    aria-label={show ? 'Sembunyikan sandi' : 'Tampilkan sandi'}
+                    aria-label={show ? t('login.sembunyiSandi') : t('login.lihatSandi')}
                   >
                     {show ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
@@ -270,11 +271,11 @@ export default function Login() {
                 {busy ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    Memverifikasi…
+                    {t('login.verifikasi')}
                   </>
                 ) : (
                   <>
-                    Masuk
+                    {t('login.masuk')}
                     <ArrowRight
                       size={16}
                       strokeWidth={2.6}
@@ -286,7 +287,7 @@ export default function Login() {
             </form>
 
             <div className="mt-6 border-t border-line pt-5">
-              <p className="label">Akun demo · sandi vitalstock</p>
+              <p className="label">{t('login.akunDemo')}</p>
               <div className="mt-2 space-y-1.5">
                 {demoAccounts.map((acc) => (
                   <motion.button
@@ -305,7 +306,7 @@ export default function Login() {
                       {acc.initials}
                     </span>
                     <span className="min-w-0 flex-1 leading-tight">
-                      <span className="block truncate text-xs font-bold">{acc.role}</span>
+                      <span className="block truncate text-xs font-bold">{td('peran', acc.role)}</span>
                       <span className="block truncate text-[10px] text-faint">{acc.email}</span>
                     </span>
                   </motion.button>

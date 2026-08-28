@@ -6,6 +6,7 @@ import clsx from 'clsx'
 import Portal from './Portal'
 import StatusBadge from './StatusBadge'
 import { getMovements } from '@/lib/api'
+import { useLang } from '@/store/LangContext'
 import { downloadCSV, stamp, toCSV } from '@/lib/export'
 import {
   dateID,
@@ -19,17 +20,18 @@ import {
   stockoutLevel,
 } from '@/lib/format'
 
-const kolomCSV = [
-  { label: 'Tanggal', value: (r) => dateID(r.at) },
-  { label: 'Jenis', value: (r) => (r.type === 'masuk' ? 'Masuk' : 'Keluar') },
-  { label: 'Jumlah', value: (r) => r.qty },
-  { label: 'Saldo', value: (r) => r.saldo },
-  { label: 'Referensi', value: (r) => r.ref },
-  { label: 'Asal / Tujuan', value: (r) => r.pihak },
+const kolomCSV = (t, td, locale) => [
+  { label: t('csv.tanggal'), value: (r) => dateID(r.at, locale) },
+  { label: t('csv.jenisTrx'), value: (r) => (r.type === 'masuk' ? t('csv.masuk') : t('csv.keluar')) },
+  { label: t('csv.jumlahTrx'), value: (r) => r.qty },
+  { label: t('csv.saldo'), value: (r) => r.saldo },
+  { label: t('csv.referensi'), value: (r) => r.ref },
+  { label: t('csv.pihak'), value: (r) => td('lokasi', r.pihak) },
 ]
 
 export default function StockCard({ med, onClose }) {
   const [rows, setRows] = useState(null)
+  const { t, td, locale } = useLang()
 
   useEffect(() => {
     let alive = true
@@ -68,16 +70,16 @@ export default function StockCard({ med, onClose }) {
       >
         <div className="flex items-start justify-between gap-3 border-b border-line p-5">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-primary">Kartu stok</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-primary">{t('kartu.label')}</p>
             <h3 className="mt-1 truncate text-lg font-extrabold tracking-tight">{med.name}</h3>
             <p className="mt-0.5 text-xs text-muted">
-              {med.batch} · {med.supplier} · {med.location}
+              {med.batch} · {med.supplier} · {td('lokasi', med.location)}
             </p>
           </div>
           <button
             onClick={onClose}
             className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-faint hover:bg-elevated hover:text-ink"
-            aria-label="Tutup"
+            aria-label={t('umum.tutup')}
           >
             <X size={16} strokeWidth={2.5} />
           </button>
@@ -86,21 +88,21 @@ export default function StockCard({ med, onClose }) {
         <div className="grid grid-cols-2 gap-3 border-b border-line p-5">
           <div className="rounded-xl bg-elevated p-3.5">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">
-              Stok saat ini
+              {t('kartu.stokSaatIni')}
             </p>
             <p className="mt-1 text-xl font-extrabold tnum">
-              {num(med.stock)}{' '}
-              <span className="text-xs font-bold text-muted">{med.unit.toLowerCase()}</span>
+              {num(med.stock, locale)}{' '}
+              <span className="text-xs font-bold text-muted">{td('satuan', med.unit)}</span>
             </p>
-            <p className="mt-0.5 text-[10px] text-faint">minimum {num(med.minStock)}</p>
+            <p className="mt-0.5 text-[10px] text-faint">{t('kartu.minimum')} {num(med.minStock, locale)}</p>
           </div>
 
           <div className="rounded-xl bg-elevated p-3.5">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">
-              Nilai persediaan
+              {t('kartu.nilai')}
             </p>
-            <p className="mt-1 text-xl font-extrabold tnum">{rupiah(med.stock * med.price)}</p>
-            <p className="mt-0.5 text-[10px] text-faint">{rupiah(med.price)} / {med.unit.toLowerCase()}</p>
+            <p className="mt-1 text-xl font-extrabold tnum">{rupiah(med.stock * med.price, locale)}</p>
+            <p className="mt-0.5 text-[10px] text-faint">{rupiah(med.price, locale)} / {td('satuan', med.unit)}</p>
           </div>
 
           <div
@@ -115,18 +117,18 @@ export default function StockCard({ med, onClose }) {
           >
             <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider">
               <TrendingDown size={12} strokeWidth={2.6} />
-              Prediksi kehabisan stok
+              {t('kartu.prediksiJudul')}
             </p>
             {habis === null ? (
-              <p className="mt-1 text-sm font-bold">Belum ada pemakaian tercatat</p>
+              <p className="mt-1 text-sm font-bold">{t('kartu.tanpaPemakaian')}</p>
             ) : (
               <>
                 <p className="mt-1 text-lg font-extrabold tnum">
-                  ± {habis} hari lagi
-                  <span className="ml-2 text-xs font-semibold opacity-70">{dateID(tglHabis)}</span>
+                  {t('kartu.prediksiIsi', { n: habis })}
+                  <span className="ml-2 text-xs font-semibold opacity-70">{dateID(tglHabis, locale)}</span>
                 </p>
                 <p className="mt-0.5 text-[11px] opacity-80">
-                  Dihitung dari rata-rata pakai {med.dailyUsage} {med.unit.toLowerCase()} per hari.
+                  {t('kartu.prediksiDasar', { n: med.dailyUsage, satuan: td('satuan', med.unit) })}
                 </p>
               </>
             )}
@@ -135,16 +137,16 @@ export default function StockCard({ med, onClose }) {
 
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
           <div className="flex items-center gap-2">
-            <StatusBadge level={overallLevel(med)} label={levelLabel[overallLevel(med)]} />
+            <StatusBadge level={overallLevel(med)} />
             <span className="text-[11px] text-faint">
-              kedaluwarsa {daysUntil(med.expiry)} hari lagi
+              {t('kartu.kedaluwarsaDalam', { n: daysUntil(med.expiry) })}
             </span>
           </div>
           <button
             onClick={() =>
               downloadCSV(
                 `kartu-stok-${med.batch}-${stamp()}.csv`,
-                toCSV(kolomCSV, rows ?? [])
+                toCSV(kolomCSV(t, td, locale), rows ?? [])
               )
             }
             disabled={!rows?.length}
@@ -156,7 +158,7 @@ export default function StockCard({ med, onClose }) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-5">
-          <p className="mb-3 text-xs font-bold">Riwayat pergerakan</p>
+          <p className="mb-3 text-xs font-bold">{t('kartu.riwayat')}</p>
 
           {!rows && (
             <div className="space-y-2">
@@ -197,15 +199,15 @@ export default function StockCard({ med, onClose }) {
                         <div className="flex items-baseline justify-between gap-2">
                           <p className="text-xs font-bold">
                             {masuk ? '+' : '−'}
-                            {num(r.qty)} {med.unit.toLowerCase()}
+                            {num(r.qty, locale)} {td('satuan', med.unit)}
                           </p>
-                          <p className="shrink-0 text-[10px] text-faint">{dateID(r.at)}</p>
+                          <p className="shrink-0 text-[10px] text-faint">{dateID(r.at, locale)}</p>
                         </div>
                         <p className="mt-0.5 truncate text-[11px] text-muted">
-                          {r.ref} · {r.pihak}
+                          {r.ref} · {td('lokasi', r.pihak)}
                         </p>
                         <p className="mt-1 text-[10px] text-faint tnum">
-                          saldo setelah transaksi: {num(r.saldo)} {med.unit.toLowerCase()}
+                          {t('kartu.saldoSetelah')}: {num(r.saldo, locale)} {td('satuan', med.unit)}
                         </p>
                       </div>
                     </motion.li>
@@ -216,7 +218,7 @@ export default function StockCard({ med, onClose }) {
           )}
 
           {rows?.length === 0 && (
-            <p className="py-10 text-center text-xs text-muted">Belum ada pergerakan tercatat.</p>
+            <p className="py-10 text-center text-xs text-muted">{t('kartu.kosong')}</p>
           )}
         </div>
       </motion.aside>

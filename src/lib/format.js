@@ -53,22 +53,27 @@ export const levelLabel = {
   critical: 'Kritis',
 }
 
-const nf = new Intl.NumberFormat('id-ID')
-export const num = (n) => nf.format(Math.round(n))
+// locale menyusul bahasa yang dipilih; mata uang tetap rupiah
+const nfCache = {}
+const nf = (loc = 'id-ID') => (nfCache[loc] ??= new Intl.NumberFormat(loc))
+export const num = (n, loc) => nf(loc).format(Math.round(n))
 
-const cf = new Intl.NumberFormat('id-ID', {
-  style: 'currency',
-  currency: 'IDR',
-  maximumFractionDigits: 0,
-})
-export const rupiah = (n) => cf.format(n)
+const cfCache = {}
+const cf = (loc = 'id-ID') =>
+  (cfCache[loc] ??= new Intl.NumberFormat(loc, {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }))
+export const rupiah = (n, loc) => cf(loc).format(n)
 
-export function rupiahShort(n) {
-  if (n >= 1e12) return `Rp ${(n / 1e12).toFixed(1)} T`
-  if (n >= 1e9) return `Rp ${(n / 1e9).toFixed(1)} M`
-  if (n >= 1e6) return `Rp ${(n / 1e6).toFixed(0)} jt`
-  return rupiah(n)
+export function rupiahShort(n, loc = 'id-ID') {
+  const en = loc.startsWith('en')
+  if (n >= 1e12) return `Rp ${(n / 1e12).toFixed(1)}${en ? 'T' : ' T'}`
+  if (n >= 1e9) return `Rp ${(n / 1e9).toFixed(1)}${en ? 'B' : ' M'}`
+  if (n >= 1e6) return `Rp ${(n / 1e6).toFixed(0)}${en ? 'M' : ' jt'}`
+  return rupiah(n, loc)
 }
 
-export const dateID = (iso) =>
-  new Date(iso).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+export const dateID = (iso, loc = 'id-ID') =>
+  new Date(iso).toLocaleDateString(loc, { day: '2-digit', month: 'short', year: 'numeric' })

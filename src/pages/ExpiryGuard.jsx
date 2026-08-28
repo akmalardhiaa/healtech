@@ -36,23 +36,25 @@ import {
 } from '@/lib/format'
 import { itemVariants, listVariants, modalVariants, revealOnScroll, rowVariants } from '@/lib/motion'
 import { useToast } from '@/components/Toast'
+import { useLang } from '@/store/LangContext'
 
 const filters = [
-  { key: 'all', label: 'Semua', icon: Boxes },
-  { key: 'critical', label: 'Kritis', icon: ShieldAlert },
-  { key: 'warning', label: 'Perhatian', icon: Timer },
-  { key: 'safe', label: 'Aman', icon: Filter },
+  { key: 'all', tk: 'umum.semua', icon: Boxes },
+  { key: 'critical', tk: 'umum.kritis', icon: ShieldAlert },
+  { key: 'warning', tk: 'umum.perhatian', icon: Timer },
+  { key: 'safe', tk: 'umum.aman', icon: Filter },
 ]
 
 const sorts = [
-  { key: 'expiry', label: 'Kedaluwarsa terdekat' },
-  { key: 'stock', label: 'Stok tersedikit' },
-  { key: 'name', label: 'Nama A–Z' },
-  { key: 'value', label: 'Nilai tertinggi' },
-  { key: 'habis', label: 'Paling cepat habis' },
+  { key: 'expiry', tk: 'stok.urutExpiry' },
+  { key: 'stock', tk: 'stok.urutStok' },
+  { key: 'name', tk: 'stok.urutNama' },
+  { key: 'value', tk: 'stok.urutNilai' },
+  { key: 'habis', tk: 'stok.urutHabis' },
 ]
 
 function StockMeter({ stock, minStock }) {
+  const { t, locale } = useLang()
   const level = stockLevel(stock, minStock)
   const pct = Math.min(100, (stock / Math.max(1, minStock * 2)) * 100)
   const tone =
@@ -61,8 +63,8 @@ function StockMeter({ stock, minStock }) {
   return (
     <div className="w-full min-w-[92px]">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs font-bold tnum">{num(stock)}</span>
-        <span className="text-[10px] text-faint tnum">min {num(minStock)}</span>
+        <span className="text-xs font-bold tnum">{num(stock, locale)}</span>
+        <span className="text-[10px] text-faint tnum">{t('stok.min')} {num(minStock, locale)}</span>
       </div>
       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line/70">
         <motion.div
@@ -77,6 +79,7 @@ function StockMeter({ stock, minStock }) {
 }
 
 function ExpiryCell({ iso }) {
+  const { t, locale } = useLang()
   const d = daysUntil(iso)
   const level = expiryLevel(iso)
   const tone =
@@ -84,13 +87,14 @@ function ExpiryCell({ iso }) {
 
   return (
     <div className="leading-tight">
-      <p className={clsx('text-xs font-extrabold tnum', tone)}>{d} hari</p>
-      <p className="text-[10px] text-faint">{dateID(iso)}</p>
+      <p className={clsx('whitespace-nowrap text-xs font-extrabold tnum', tone)}>{d} {t('umum.hari')}</p>
+      <p className="text-[10px] text-faint">{dateID(iso, locale)}</p>
     </div>
   )
 }
 
 function StockoutCell({ med }) {
+  const { t } = useLang()
   const d = daysToStockout(med)
   const level = stockoutLevel(med)
   if (d === null) return <span className="text-[11px] text-faint">—</span>
@@ -100,8 +104,8 @@ function StockoutCell({ med }) {
 
   return (
     <div className="leading-tight">
-      <p className={clsx('text-xs font-extrabold tnum', tone)}>± {d} hari</p>
-      <p className="text-[10px] text-faint">{med.dailyUsage}/hari</p>
+      <p className={clsx('whitespace-nowrap text-xs font-extrabold tnum', tone)}>± {d} {t('umum.hari')}</p>
+      <p className="text-[10px] text-faint">{med.dailyUsage}{t('stok.perHari')}</p>
     </div>
   )
 }
@@ -110,6 +114,7 @@ function RestockModal({ med, onClose, onDone }) {
   const [qty, setQty] = useState(Math.max(100, med.minStock))
   const [busy, setBusy] = useState(false)
   const toast = useToast()
+  const { t, td, locale } = useLang()
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -122,7 +127,7 @@ function RestockModal({ med, onClose, onDone }) {
     setBusy(true)
     try {
       const updated = await restock(med.id, Number(qty))
-      toast.success(`${med.name} ditambah ${num(qty)} ${med.unit.toLowerCase()}.`)
+      toast.success(t('stok.berhasilTambah', { nama: med.name, qty: num(qty, locale), satuan: td('satuan', med.unit) }))
       onDone(updated)
       onClose()
     } catch (err) {
@@ -151,14 +156,14 @@ function RestockModal({ med, onClose, onDone }) {
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-extrabold tracking-tight">Tambah stok</h3>
+            <h3 className="text-base font-extrabold tracking-tight">{t('stok.tambahJudul')}</h3>
             <p className="mt-0.5 text-xs text-muted">{med.name}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="grid h-8 w-8 place-items-center rounded-lg text-faint hover:bg-elevated hover:text-ink"
-            aria-label="Tutup"
+            aria-label={t('umum.tutup')}
           >
             <X size={15} strokeWidth={2.5} />
           </button>
@@ -166,27 +171,27 @@ function RestockModal({ med, onClose, onDone }) {
 
         <div className="mt-5 rounded-xl bg-elevated p-3.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted">Stok saat ini</span>
+            <span className="text-muted">{t('stok.stokSaatIni')}</span>
             <span className="font-bold tnum">
-              {num(med.stock)} {med.unit.toLowerCase()}
+              {num(med.stock, locale)} {td('satuan', med.unit)}
             </span>
           </div>
           <div className="mt-1.5 flex items-center justify-between text-xs">
-            <span className="text-muted">Setelah penambahan</span>
+            <span className="text-muted">{t('stok.setelahTambah')}</span>
             <motion.span
               key={qty}
               initial={{ scale: 1.12, color: 'hsl(var(--vital))' }}
               animate={{ scale: 1, color: 'hsl(var(--ink))' }}
               className="font-extrabold tnum"
             >
-              {num(med.stock + Number(qty || 0))} {med.unit.toLowerCase()}
+              {num(med.stock + Number(qty || 0), locale)} {td('satuan', med.unit)}
             </motion.span>
           </div>
         </div>
 
         <div className="mt-4">
           <label htmlFor="qty" className="label">
-            Jumlah penambahan
+            {t('stok.jumlahTambah')}
           </label>
           <input
             id="qty"
@@ -206,7 +211,7 @@ function RestockModal({ med, onClose, onDone }) {
                 onClick={() => setQty(v)}
                 className="rounded-lg border border-line bg-elevated px-2.5 py-1 text-[11px] font-semibold text-muted transition-colors hover:border-primary/40 hover:text-primary-ink"
               >
-                +{num(v)}
+                +{num(v, locale)}
               </button>
             ))}
           </div>
@@ -214,10 +219,10 @@ function RestockModal({ med, onClose, onDone }) {
 
         <div className="mt-6 flex gap-2">
           <button type="button" onClick={onClose} className="btn-ghost flex-1">
-            Batal
+            {t('umum.batal')}
           </button>
           <button type="submit" disabled={busy} className="btn-primary flex-1">
-            {busy ? 'Menyimpan…' : 'Simpan'}
+            {busy ? t('umum.menyimpan') : t('umum.simpan')}
           </button>
         </div>
       </motion.form>
@@ -234,6 +239,7 @@ export default function ExpiryGuard() {
   const [target, setTarget] = useState(null)
   const [kartu, setKartu] = useState(null)
   const toast = useToast()
+  const { t, td, locale } = useLang()
   const [params, setParams] = useSearchParams()
   const scope = useRef(null)
 
@@ -301,24 +307,24 @@ export default function ExpiryGuard() {
 
   function eksporCSV() {
     const kolom = [
-      { label: 'Nama obat', value: (m) => m.name },
-      { label: 'Batch', value: (m) => m.batch },
-      { label: 'Kategori', value: (m) => m.category },
-      { label: 'Satuan', value: (m) => m.unit },
-      { label: 'Stok', value: (m) => m.stock },
-      { label: 'Stok minimum', value: (m) => m.minStock },
-      { label: 'Pakai per hari', value: (m) => m.dailyUsage },
-      { label: 'Prediksi habis (hari)', value: (m) => daysToStockout(m) ?? '' },
-      { label: 'Sisa umur (hari)', value: (m) => daysUntil(m.expiry) },
-      { label: 'Kedaluwarsa', value: (m) => dateID(m.expiry) },
-      { label: 'Lokasi', value: (m) => m.location },
-      { label: 'Supplier', value: (m) => m.supplier },
-      { label: 'Harga satuan', value: (m) => m.price },
-      { label: 'Nilai persediaan', value: (m) => m.stock * m.price },
-      { label: 'Status', value: (m) => levelLabel[overallLevel(m)] },
+      { label: t('csv.nama'), value: (m) => m.name },
+      { label: t('csv.batch'), value: (m) => m.batch },
+      { label: t('csv.kategori'), value: (m) => td('kategori', m.category) },
+      { label: t('csv.satuan'), value: (m) => td('satuan', m.unit) },
+      { label: t('csv.stok'), value: (m) => m.stock },
+      { label: t('csv.stokMin'), value: (m) => m.minStock },
+      { label: t('csv.pakaiHari'), value: (m) => m.dailyUsage },
+      { label: t('csv.prediksiHari'), value: (m) => daysToStockout(m) ?? '' },
+      { label: t('csv.sisaUmurHari'), value: (m) => daysUntil(m.expiry) },
+      { label: t('csv.kedaluwarsa'), value: (m) => dateID(m.expiry, locale) },
+      { label: t('csv.lokasi'), value: (m) => td('lokasi', m.location) },
+      { label: t('csv.supplier'), value: (m) => m.supplier },
+      { label: t('csv.harga'), value: (m) => m.price },
+      { label: t('csv.nilai'), value: (m) => m.stock * m.price },
+      { label: t('csv.status'), value: (m) => t(`umum.${{ safe: 'aman', warning: 'perhatian', critical: 'kritis' }[overallLevel(m)]}`) },
     ]
     downloadCSV(`stok-obat-${stamp()}.csv`, toCSV(kolom, rows))
-    toast.success(`${rows.length} baris diekspor ke CSV.`)
+    toast.success(t('stok.berhasilEkspor', { n: rows.length }))
   }
 
   function applyRestock(updated) {
@@ -338,8 +344,8 @@ export default function ExpiryGuard() {
     <div ref={scope} className="space-y-6">
       <PageHeader
         eyebrow="ExpiryGuard"
-        title="Manajemen stok obat"
-        description="Pantau sisa umur simpan setiap batch dengan indikator warna otomatis berbasis FEFO, lengkap dengan posisi stok terhadap buffer minimum unit."
+        title={t('stok.judul')}
+        description={t('stok.deskripsi')}
       />
 
       <motion.div
@@ -356,14 +362,14 @@ export default function ExpiryGuard() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari nama obat, kategori, batch, atau lokasi…"
+            placeholder={t('stok.cariPlaceholder')}
             className="input pl-10"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
               className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-lg text-faint hover:text-ink"
-              aria-label="Bersihkan pencarian"
+              aria-label={t('umum.tutup')}
             >
               <X size={14} strokeWidth={2.5} />
             </button>
@@ -394,7 +400,7 @@ export default function ExpiryGuard() {
                   />
                 )}
                 <f.icon size={13} strokeWidth={2.4} className="relative" />
-                <span className="relative">{f.label}</span>
+                <span className="relative">{t(f.tk)}</span>
                 <span
                   className={clsx(
                     'relative rounded-full px-1.5 py-0.5 text-[10px] font-bold tnum',
@@ -417,11 +423,11 @@ export default function ExpiryGuard() {
             value={sort}
             onChange={(e) => setSort(e.target.value)}
             className="input cursor-pointer appearance-none py-2 pl-9 pr-8 text-xs font-semibold"
-            aria-label="Urutkan"
+            aria-label={t('stok.diurutkan')}
           >
             {sorts.map((s) => (
               <option key={s.key} value={s.key}>
-                {s.label}
+                {t(s.tk)}
               </option>
             ))}
           </select>
@@ -431,14 +437,14 @@ export default function ExpiryGuard() {
       <div className="reveal card overflow-hidden">
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
           <h3 className="text-sm font-bold tracking-tight">
-            Daftar obat
+            {t('stok.daftar')}
             <span className="ml-2 rounded-full bg-elevated px-2 py-0.5 text-[11px] font-bold text-muted tnum">
               {rows.length}
             </span>
           </h3>
           <div className="flex items-center gap-3">
             <p className="hidden text-[11px] text-faint sm:block">
-              Diurutkan: {sorts.find((s) => s.key === sort)?.label}
+              {t('stok.diurutkan')}: {t(sorts.find((s) => s.key === sort)?.tk)}
             </p>
             <motion.button
               onClick={eksporCSV}
@@ -448,7 +454,7 @@ export default function ExpiryGuard() {
               className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[11px] font-bold text-muted transition-colors hover:border-primary/40 hover:text-primary-ink disabled:opacity-40"
             >
               <Download size={13} strokeWidth={2.4} />
-              Ekspor CSV
+              {t('umum.ekspor')}
             </motion.button>
           </div>
         </div>
@@ -457,13 +463,13 @@ export default function ExpiryGuard() {
           <table className="w-full min-w-[880px] border-collapse text-left">
             <thead>
               <tr className="border-b border-line bg-elevated/60">
-                {['Obat', 'Kategori', 'Stok / minimum', 'Sisa umur', 'Prediksi habis', 'Lokasi', 'Nilai', 'Status', ''].map(
+                {['stok.kolomObat','stok.kolomKategori','stok.kolomStok','stok.kolomUmur','stok.kolomHabis','stok.kolomLokasi','stok.kolomNilai','stok.kolomStatus',''].map(
                   (h) => (
                     <th
                       key={h}
                       className="px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-faint"
                     >
-                      {h}
+                      {h ? t(h) : ''}
                     </th>
                   )
                 )}
@@ -521,7 +527,7 @@ export default function ExpiryGuard() {
                                       : 'text-muted'
                                 )}
                               >
-                                exp {daysUntil(m.expiry)} hari
+                                {t('stok.exp')} {daysUntil(m.expiry)} {t('umum.hari')}
                               </span>
                               {daysToStockout(m) !== null && (
                                 <span
@@ -533,7 +539,7 @@ export default function ExpiryGuard() {
                                         : 'text-muted'
                                   )}
                                 >
-                                  habis ±{daysToStockout(m)} hari
+                                  {t('stok.habisSingkat')} ±{daysToStockout(m)} {t('umum.hari')}
                                 </span>
                               )}
                             </p>
@@ -543,7 +549,7 @@ export default function ExpiryGuard() {
 
                       <td className="px-5 py-3.5">
                         <span className="rounded-md bg-elevated px-2 py-1 text-[10px] font-semibold text-muted">
-                          {m.category}
+                          {td('kategori', m.category)}
                         </span>
                       </td>
 
@@ -559,14 +565,14 @@ export default function ExpiryGuard() {
                         <StockoutCell med={m} />
                       </td>
 
-                      <td className="px-5 py-3.5 text-[11px] text-muted">{m.location}</td>
+                      <td className="px-5 py-3.5 text-[11px] text-muted">{td('lokasi', m.location)}</td>
 
                       <td className="px-5 py-3.5 text-[11px] font-semibold tnum text-muted">
-                        {rupiah(m.stock * m.price)}
+                        {rupiah(m.stock * m.price, locale)}
                       </td>
 
                       <td className="px-5 py-3.5">
-                        <StatusBadge level={level} label={levelLabel[level]} />
+                        <StatusBadge level={level} />
                       </td>
 
                       <td className="px-5 py-3.5 text-right">
@@ -580,7 +586,7 @@ export default function ExpiryGuard() {
                           className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[11px] font-bold text-muted opacity-0 transition-all duration-200 hover:border-primary/40 hover:text-primary-ink focus-visible:opacity-100 group-hover:opacity-100"
                         >
                           <PackagePlus size={13} strokeWidth={2.4} />
-                          Restock
+                          {t('stok.restock')}
                         </motion.button>
                       </td>
                     </motion.tr>
@@ -600,9 +606,9 @@ export default function ExpiryGuard() {
             <div className="grid h-12 w-12 place-items-center rounded-2xl bg-elevated text-faint">
               <Search size={20} />
             </div>
-            <p className="text-sm font-bold">Tidak ada obat yang cocok</p>
+            <p className="text-sm font-bold">{t('stok.kosongJudul')}</p>
             <p className="max-w-xs text-xs text-muted">
-              Coba ubah kata kunci pencarian atau pilih filter status yang berbeda.
+              {t('stok.kosongIsi')}
             </p>
           </motion.div>
         )}

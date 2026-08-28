@@ -5,6 +5,7 @@ import { Bell, Menu, Moon, Search, Sun } from 'lucide-react'
 import CommandPalette from './CommandPalette'
 import clsx from 'clsx'
 import { useTheme } from '@/store/ThemeContext'
+import { useLang } from '@/store/LangContext'
 import { navItems } from './Sidebar'
 import { activityFeed } from '@/data/mockData'
 
@@ -15,15 +16,41 @@ const toneDot = {
   primary: 'bg-primary',
 }
 
+function LangToggle() {
+  const { lang, toggle, t } = useLang()
+  return (
+    <motion.button
+      onClick={toggle}
+      whileTap={{ scale: 0.9 }}
+      className="grid h-9 min-w-9 place-items-center rounded-xl border border-line bg-surface px-2 text-[11px] font-bold uppercase tracking-wide text-muted transition-colors hover:text-ink"
+      aria-label={t('topbar.bahasa')}
+      title={`${t('topbar.bahasa')}: ${lang === 'id' ? 'Indonesia' : 'English'}`}
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={lang}
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -10, opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {lang === 'id' ? 'ID' : 'EN'}
+        </motion.span>
+      </AnimatePresence>
+    </motion.button>
+  )
+}
+
 function ThemeToggle() {
   const { dark, toggle } = useTheme()
+  const { t } = useLang()
   return (
     <motion.button
       onClick={toggle}
       whileTap={{ scale: 0.9 }}
       className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-xl border border-line bg-surface text-muted transition-colors hover:text-ink"
-      aria-label={dark ? 'Aktifkan mode terang' : 'Aktifkan mode gelap'}
-      title={dark ? 'Mode terang' : 'Mode gelap'}
+      aria-label={dark ? t('topbar.modeTerang') : t('topbar.modeGelap')}
+      title={dark ? t('topbar.modeTerang') : t('topbar.modeGelap')}
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
@@ -42,6 +69,7 @@ function ThemeToggle() {
 }
 
 function NotificationBell() {
+  const { t, lang } = useLang()
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
@@ -65,7 +93,7 @@ function NotificationBell() {
         onClick={() => setOpen((o) => !o)}
         whileTap={{ scale: 0.9 }}
         className="relative grid h-9 w-9 place-items-center rounded-xl border border-line bg-surface text-muted transition-colors hover:text-ink"
-        aria-label="Notifikasi"
+        aria-label={t('topbar.notifikasi')}
       >
         <Bell size={16} strokeWidth={2.3} />
         <span className="absolute right-2 top-2 flex h-2 w-2">
@@ -84,9 +112,9 @@ function NotificationBell() {
             className="absolute right-0 z-50 mt-2 w-[min(88vw,20rem)] origin-top-right overflow-hidden rounded-2xl border border-line bg-surface shadow-lift"
           >
             <div className="flex items-center justify-between border-b border-line px-4 py-3">
-              <p className="text-sm font-bold">Aktivitas terbaru</p>
+              <p className="text-sm font-bold">{t('topbar.aktivitasTerbaru')}</p>
               <span className="rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-bold text-danger-ink">
-                {activityFeed.length} baru
+                {t('topbar.baru', { n: activityFeed.length })}
               </span>
             </div>
 
@@ -106,8 +134,8 @@ function NotificationBell() {
                     )}
                   />
                   <div className="min-w-0">
-                    <p className="text-xs leading-snug text-ink">{a.text}</p>
-                    <p className="mt-0.5 text-[10px] text-faint">{a.time} lalu</p>
+                    <p className="text-xs leading-snug text-ink">{lang === 'en' && a.textEn ? a.textEn : a.text}</p>
+                    <p className="mt-0.5 text-[10px] text-faint">{a.time} {t('topbar.lalu')}</p>
                   </div>
                 </motion.li>
               ))}
@@ -121,6 +149,7 @@ function NotificationBell() {
 
 export default function Topbar({ onMenu }) {
   const [cari, setCari] = useState(false)
+  const { t } = useLang()
   const { pathname } = useLocation()
 
   useEffect(() => {
@@ -149,14 +178,14 @@ export default function Topbar({ onMenu }) {
         <button
           onClick={onMenu}
           className="grid h-9 w-9 place-items-center rounded-xl border border-line bg-surface text-muted lg:hidden"
-          aria-label="Buka menu"
+          aria-label={t('topbar.bukaMenu')}
         >
           <Menu size={16} strokeWidth={2.4} />
         </button>
 
         <div className="min-w-0">
           <p className="truncate text-sm font-bold leading-tight">{current?.label ?? 'VitalStock'}</p>
-          <p className="hidden truncate text-[11px] text-faint sm:block">{current?.hint}</p>
+          <p className="hidden truncate text-[11px] text-faint sm:block">{current ? t(current.hint) : ''}</p>
         </div>
 
         <div className="ml-auto hidden items-center md:flex">
@@ -165,7 +194,7 @@ export default function Topbar({ onMenu }) {
             className="group flex w-64 items-center gap-2.5 rounded-xl border border-line bg-elevated px-3 py-2 text-left transition-colors hover:border-primary/40"
           >
             <Search size={15} className="shrink-0 text-faint transition-colors group-hover:text-primary" />
-            <span className="flex-1 text-sm text-faint">Cari obat, batch, unit…</span>
+            <span className="flex-1 text-sm text-faint">{t('palette.tombol')}</span>
             <kbd className="rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-faint">
               Ctrl K
             </kbd>
@@ -176,11 +205,12 @@ export default function Topbar({ onMenu }) {
           <button
             onClick={() => setCari(true)}
             className="grid h-9 w-9 place-items-center rounded-xl border border-line bg-surface text-muted transition-colors hover:text-ink md:hidden"
-            aria-label="Cari"
+            aria-label={t('umum.cari')}
           >
             <Search size={16} strokeWidth={2.3} />
           </button>
           <NotificationBell />
+          <LangToggle />
           <ThemeToggle />
         </div>
       </div>

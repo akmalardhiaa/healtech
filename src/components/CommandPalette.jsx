@@ -6,6 +6,7 @@ import clsx from 'clsx'
 
 import Portal from './Portal'
 import { getDashboard } from '@/lib/api'
+import { useLang } from '@/store/LangContext'
 import { daysUntil, num, overallLevel } from '@/lib/format'
 import { modalVariants } from '@/lib/motion'
 
@@ -28,6 +29,7 @@ export default function CommandPalette({ open, onClose }) {
   const navigate = useNavigate()
   const inputRef = useRef(null)
   const listRef = useRef(null)
+  const { t, td, locale } = useLang()
 
   // data dimuat sekali saat palette pertama dibuka
   useEffect(() => {
@@ -58,8 +60,8 @@ export default function CommandPalette({ open, onClose }) {
         grup: 'obat',
         id: m.id,
         judul: m.name,
-        info: `${m.batch} · sisa ${num(m.stock)} ${m.unit.toLowerCase()}`,
-        kanan: `${daysUntil(m.expiry)} hari`,
+        info: `${m.batch} · ${num(m.stock, locale)} ${td('satuan', m.unit)}`,
+        kanan: `${daysUntil(m.expiry)} ${t('umum.hari')}`,
         level: overallLevel(m),
         cari: m.name,
       }))
@@ -76,8 +78,8 @@ export default function CommandPalette({ open, onClose }) {
         grup: 'kirim',
         id: s.id,
         judul: s.id,
-        info: `${s.origin} → ${s.destination}`,
-        kanan: s.eta,
+        info: `${td('lokasi', s.origin)} → ${td('lokasi', s.destination)}`,
+        kanan: (locale.startsWith('en') && s.etaEn) || s.eta,
         level: 'safe',
       }))
 
@@ -93,8 +95,8 @@ export default function CommandPalette({ open, onClose }) {
         grup: 'minta',
         id: r.id,
         judul: `${r.id} · ${r.medicine}`,
-        info: `${num(r.qty)} ${r.unit.toLowerCase()} · ${r.unitName}`,
-        kanan: r.status === 'pending' ? 'Menunggu' : '',
+        info: `${num(r.qty, locale)} ${td('satuan', r.unit)} · ${td('lokasi', r.unitName)}`,
+        kanan: r.status === 'pending' ? t('umum.menunggu') : '',
         level: r.priority === 'Urgent' ? 'critical' : 'safe',
       }))
 
@@ -158,7 +160,7 @@ export default function CommandPalette({ open, onClose }) {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 onKeyDown={onKey}
-                placeholder="Cari obat, batch, pengiriman, atau permintaan…"
+                placeholder={t('palette.placeholder')}
                 className="w-full bg-transparent py-4 text-sm outline-none placeholder:text-faint"
               />
               <kbd className="hidden shrink-0 rounded border border-line bg-elevated px-1.5 py-0.5 text-[10px] font-semibold text-faint sm:block">
@@ -167,11 +169,11 @@ export default function CommandPalette({ open, onClose }) {
             </div>
 
             <div ref={listRef} className="max-h-[52vh] overflow-y-auto p-2">
-              {!data && <p className="px-3 py-8 text-center text-xs text-faint">Memuat data…</p>}
+              {!data && <p className="px-3 py-8 text-center text-xs text-faint">{t('umum.memuat')}</p>}
 
               {data && hasil.length === 0 && (
                 <p className="px-3 py-8 text-center text-xs text-muted">
-                  Tidak ada yang cocok dengan “{q}”.
+                  {t('palette.kosong', { q })}
                 </p>
               )}
 
@@ -217,10 +219,10 @@ export default function CommandPalette({ open, onClose }) {
             </div>
 
             <div className="flex items-center gap-4 border-t border-line bg-elevated/60 px-4 py-2.5 text-[10px] text-faint">
-              <span>↑↓ pilih</span>
-              <span>↵ buka</span>
+              <span>↑↓ {t('palette.pilih')}</span>
+              <span>↵ {t('palette.buka')}</span>
               <span className="ml-auto">
-                {q ? `${hasil.length} hasil` : 'Menampilkan stok kritis & permintaan tertunda'}
+                {q ? t('palette.hasil', { n: hasil.length }) : t('palette.bawaan')}
               </span>
             </div>
           </motion.div>

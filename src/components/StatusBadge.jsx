@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import { motion } from 'framer-motion'
 import { AlertTriangle, CheckCircle2, Clock, XCircle, Zap } from 'lucide-react'
-import { levelLabel } from '@/lib/format'
+import { useLang } from '@/store/LangContext'
 
 const tones = {
   safe: 'bg-vital-soft text-vital-ink ring-vital/30',
@@ -20,8 +20,10 @@ const icons = {
 }
 
 export default function StatusBadge({ level = 'neutral', label, icon = true, pulse, className }) {
+  const { t } = useLang()
   const Icon = icons[level] ?? icons.neutral
-  const text = label ?? levelLabel[level] ?? level
+  const bawaan = { safe: t('umum.aman'), warning: t('umum.perhatian'), critical: t('umum.kritis') }
+  const text = label ?? bawaan[level] ?? level
   const shouldPulse = pulse ?? level === 'critical'
 
   return (

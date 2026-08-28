@@ -23,16 +23,18 @@ import { num } from '@/lib/format'
 import { itemVariants, listVariants, modalVariants, revealOnScroll } from '@/lib/motion'
 import { useToast } from '@/components/Toast'
 import { useAuth } from '@/store/AuthContext'
+import { useLang } from '@/store/LangContext'
 
 const statusMeta = {
-  pending: { level: 'warning', label: 'Menunggu' },
-  approved: { level: 'safe', label: 'Disetujui' },
-  rejected: { level: 'critical', label: 'Ditolak' },
+  pending: { level: 'warning', tk: 'umum.menunggu' },
+  approved: { level: 'safe', tk: 'umum.disetujui' },
+  rejected: { level: 'critical', tk: 'umum.ditolak' },
 }
 
 function DecisionModal({ req, decision, onClose, onConfirm }) {
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
+  const { t, td, locale } = useLang()
   const approve = decision === 'approved'
 
   useEffect(() => {
@@ -77,7 +79,7 @@ function DecisionModal({ req, decision, onClose, onConfirm }) {
           </span>
           <div>
             <h3 className="text-base font-extrabold tracking-tight">
-              {approve ? 'Setujui permintaan?' : 'Tolak permintaan?'}
+              {approve ? t('approval.setujuiTanya') : t('approval.tolakTanya')}
             </h3>
             <p className="mt-0.5 text-xs text-muted">
               {req.id} · {req.medicine}
@@ -87,10 +89,10 @@ function DecisionModal({ req, decision, onClose, onConfirm }) {
 
         <div className="mt-5 space-y-2 rounded-xl bg-elevated p-4 text-xs">
           {[
-            ['Jumlah', `${num(req.qty)} ${req.unit.toLowerCase()}`],
-            ['Unit pemohon', req.unitName],
-            ['Pemohon', req.requester],
-            ['Prioritas', req.priority],
+            [t('approval.jumlah'), `${num(req.qty, locale)} ${td('satuan', req.unit)}`],
+            [t('approval.unitPemohon'), td('lokasi', req.unitName)],
+            [t('approval.pemohon'), req.requester],
+            [t('approval.prioritas'), req.priority === 'Urgent' ? t('umum.urgent') : t('umum.reguler')],
           ].map(([k, v]) => (
             <div key={k} className="flex justify-between gap-3">
               <span className="text-muted">{k}</span>
@@ -101,14 +103,13 @@ function DecisionModal({ req, decision, onClose, onConfirm }) {
 
         {approve && (
           <p className="mt-3 rounded-lg bg-primary-soft px-3 py-2 text-[11px] text-primary-ink">
-            Stok gudang pusat akan berkurang {num(req.qty)} {req.unit.toLowerCase()} setelah
-            disetujui.
+            {t('approval.peringatanStok', { qty: num(req.qty, locale), satuan: td('satuan', req.unit) })}
           </p>
         )}
 
         <div className="mt-4">
           <label htmlFor="note" className="label">
-            Catatan {approve ? '(opsional)' : 'alasan penolakan'}
+            {approve ? t('approval.catatanOpsional') : t('approval.catatanWajib')}
           </label>
           <textarea
             id="note"
@@ -117,7 +118,7 @@ function DecisionModal({ req, decision, onClose, onConfirm }) {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder={
-              approve ? 'Contoh: Dikirim bersama jadwal distribusi sore.' : 'Contoh: Melebihi kuota bulanan unit.'
+              approve ? t('approval.contohSetuju') : t('approval.contohTolak')
             }
             className="input resize-none"
           />
@@ -125,14 +126,14 @@ function DecisionModal({ req, decision, onClose, onConfirm }) {
 
         <div className="mt-6 flex gap-2">
           <button type="button" onClick={onClose} className="btn-ghost flex-1">
-            Batal
+            {t('umum.batal')}
           </button>
           <button
             type="submit"
             disabled={busy}
             className={clsx('flex-1', approve ? 'btn-primary' : 'btn-danger')}
           >
-            {busy ? 'Memproses…' : approve ? 'Setujui' : 'Tolak'}
+            {busy ? t('umum.memproses') : approve ? t('approval.setujui') : t('approval.tolak')}
           </button>
         </div>
       </motion.form>
@@ -142,6 +143,7 @@ function DecisionModal({ req, decision, onClose, onConfirm }) {
 }
 
 function RequestCard({ req, onDecide, canApprove }) {
+  const { t, td, lang, locale } = useLang()
   const meta = statusMeta[req.status]
   const pending = req.status === 'pending'
   const urgent = req.priority === 'Urgent'
@@ -177,22 +179,22 @@ function RequestCard({ req, onDecide, canApprove }) {
           <p className="font-mono text-[11px] font-bold text-faint">{req.id}</p>
           <h3 className="mt-0.5 text-sm font-extrabold tracking-tight">{req.medicine}</h3>
           <p className="mt-1 text-xs font-semibold text-primary-ink tnum">
-            {num(req.qty)} {req.unit.toLowerCase()}
+            {num(req.qty, locale)} {td('satuan', req.unit)}
           </p>
         </div>
 
         <div className="flex flex-col items-end gap-1.5">
-          <StatusBadge level={meta.level} label={meta.label} pulse={false} />
-          {urgent && pending && <StatusBadge level="critical" label="Urgent" icon={false} />}
+          <StatusBadge level={meta.level} label={t(meta.tk)} pulse={false} />
+          {urgent && pending && <StatusBadge level="critical" label={t('umum.urgent')} icon={false} />}
         </div>
       </div>
 
       <div className="mt-4 grid gap-2 pl-2 text-[11px] sm:grid-cols-2">
         {[
           { icon: User, label: req.requester },
-          { icon: Hospital, label: req.unitName },
-          { icon: Clock, label: req.submittedAt },
-          { icon: FileText, label: `Prioritas ${req.priority}` },
+          { icon: Hospital, label: td('lokasi', req.unitName) },
+          { icon: Clock, label: (lang === 'en' && req.submittedAtEn) || req.submittedAt },
+          { icon: FileText, label: `${t('approval.prioritas')}: ${req.priority === 'Urgent' ? t('umum.urgent') : t('umum.reguler')}` },
         ].map((f, i) => (
           <p key={i} className="flex items-center gap-1.5 text-muted">
             <f.icon size={12} strokeWidth={2.2} className="shrink-0 text-faint" />
@@ -202,12 +204,12 @@ function RequestCard({ req, onDecide, canApprove }) {
       </div>
 
       <p className="mt-3 rounded-xl bg-elevated px-3.5 py-2.5 text-[11px] leading-relaxed text-muted">
-        {req.reason}
+        {lang === 'en' && req.reasonEn ? req.reasonEn : req.reason}
       </p>
 
       {req.note && (
         <p className="mt-2 rounded-xl border border-dashed border-line px-3.5 py-2.5 text-[11px] leading-relaxed text-muted">
-          <span className="font-bold text-ink">Catatan penyetuju: </span>
+          <span className="font-bold text-ink">{t('approval.catatanPenyetuju')}</span>
           {req.note}
         </p>
       )}
@@ -229,7 +231,7 @@ function RequestCard({ req, onDecide, canApprove }) {
                 className="btn-ghost flex-1 py-2 text-xs hover:border-danger/40 hover:text-danger-ink"
               >
                 <X size={14} strokeWidth={2.8} />
-                Tolak
+                {t('approval.tolak')}
               </motion.button>
               <motion.button
                 onClick={() => onDecide(req, 'approved')}
@@ -238,13 +240,13 @@ function RequestCard({ req, onDecide, canApprove }) {
                 className="btn-primary flex-1 py-2 text-xs"
               >
                 <Check size={14} strokeWidth={2.8} />
-                Setujui
+                {t('approval.setujui')}
               </motion.button>
             </motion.div>
           ) : (
             <p className="mt-4 flex items-center gap-1.5 pl-2 text-[11px] text-faint">
               <Lock size={12} strokeWidth={2.4} />
-              Hanya Kepala Instalasi Farmasi &amp; Admin yang dapat memutuskan.
+              {t('approval.terkunci')}
             </p>
           )
         ) : (
@@ -254,7 +256,7 @@ function RequestCard({ req, onDecide, canApprove }) {
             animate={{ opacity: 1, y: 0 }}
             className="mt-4 pl-2 text-[11px] text-faint"
           >
-            Diputuskan {req.decidedAt ?? 'sebelumnya'}.
+            {t('approval.diputuskan', { kapan: req.decidedAt === 'baru saja' ? t('approval.baruSaja') : (req.decidedAt ?? t('approval.sebelumnya')) })}
           </motion.p>
         )}
       </AnimatePresence>
@@ -269,6 +271,7 @@ export default function ApprovalFlow() {
   const scope = useRef(null)
   const toast = useToast()
   const { user } = useAuth()
+  const { t, td } = useLang()
 
   useEffect(() => {
     let alive = true
@@ -288,12 +291,12 @@ export default function ApprovalFlow() {
     if (!requests) return []
     const by = (s) => requests.filter((r) => r.status === s).length
     return [
-      { key: 'pending', label: 'Menunggu', n: by('pending') },
-      { key: 'approved', label: 'Disetujui', n: by('approved') },
-      { key: 'rejected', label: 'Ditolak', n: by('rejected') },
-      { key: 'all', label: 'Semua', n: requests.length },
+      { key: 'pending', label: t('umum.menunggu'), n: by('pending') },
+      { key: 'approved', label: t('umum.disetujui'), n: by('approved') },
+      { key: 'rejected', label: t('umum.ditolak'), n: by('rejected') },
+      { key: 'all', label: t('approval.tabSemua'), n: requests.length },
     ]
-  }, [requests])
+  }, [requests, t])
 
   const visible = useMemo(() => {
     if (!requests) return []
@@ -305,7 +308,7 @@ export default function ApprovalFlow() {
       const updated = await decideRequest(id, decision, note)
       setRequests((prev) => prev.map((r) => (r.id === id ? updated : r)))
       toast[decision === 'approved' ? 'success' : 'info'](
-        `${id} ${decision === 'approved' ? 'disetujui' : 'ditolak'}.`
+        t(decision === 'approved' ? 'approval.toastSetuju' : 'approval.toastTolak', { id })
       )
     } catch (err) {
       toast.error(err.message)
@@ -327,13 +330,13 @@ export default function ApprovalFlow() {
     <div ref={scope} className="space-y-6">
       <PageHeader
         eyebrow="ApprovalFlow"
-        title="Persetujuan permintaan obat"
-        description="Gantikan alur persetujuan berbasis kertas dengan keputusan digital yang tercatat, sehingga respons terhadap kebutuhan logistik mendesak jadi jauh lebih cepat."
+        title={t('approval.judul')}
+        description={t('approval.deskripsi')}
         actions={
           <div className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3.5 py-2">
             <ClipboardCheck size={15} className="text-warn" strokeWidth={2.4} />
             <span className="text-xs font-bold tnum">{pendingCount}</span>
-            <span className="text-xs text-muted">menunggu keputusan</span>
+            <span className="text-xs text-muted">{t('approval.menungguKeputusan')}</span>
           </div>
         }
       />
@@ -346,9 +349,7 @@ export default function ApprovalFlow() {
         >
           <Lock size={15} strokeWidth={2.4} className="mt-0.5 shrink-0 text-warn-ink" />
           <p className="text-xs leading-relaxed text-warn-ink">
-            Anda masuk sebagai <span className="font-bold">{user?.role}</span>, sehingga hanya dapat
-            memantau status permintaan. Masuk sebagai Kepala Instalasi Farmasi untuk memberi
-            keputusan.
+            {t('approval.hanyaPantau', { peran: td('peran', user?.role) })}
           </p>
         </motion.div>
       )}
@@ -413,9 +414,9 @@ export default function ApprovalFlow() {
           >
             <Check size={22} strokeWidth={2.8} />
           </motion.div>
-          <p className="text-sm font-bold">Semua permintaan sudah diproses</p>
+          <p className="text-sm font-bold">{t('approval.kosongJudul')}</p>
           <p className="max-w-xs text-xs text-muted">
-            Tidak ada permintaan pada kategori ini. Kerja bagus.
+            {t('approval.kosongIsi')}
           </p>
         </motion.div>
       )}

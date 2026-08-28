@@ -20,11 +20,13 @@ import { advanceShipment, getShipments } from '@/lib/api'
 import { shipmentStages } from '@/data/mockData'
 import { itemVariants, listVariants, revealOnScroll, gsap, drawPath } from '@/lib/motion'
 import { useToast } from '@/components/Toast'
+import { useLang } from '@/store/LangContext'
 
 const stageTone = ['bg-faint', 'bg-primary', 'bg-warn', 'bg-vital']
 const stageLevel = ['neutral', 'info', 'warning', 'safe']
 
 function StageRail({ stage, compact }) {
+  const { td } = useLang()
   const pct = (stage / (shipmentStages.length - 1)) * 100
 
   return (
@@ -84,7 +86,7 @@ function StageRail({ stage, compact }) {
                 i <= stage ? 'text-ink' : 'text-faint'
               )}
             >
-              {s}
+              {td('tahap', s)}
             </p>
           ))}
         </div>
@@ -94,6 +96,7 @@ function StageRail({ stage, compact }) {
 }
 
 function RouteMap({ shipments }) {
+  const { t, td } = useLang()
   const svgRef = useRef(null)
   const pathRef = useRef(null)
 
@@ -127,19 +130,19 @@ function RouteMap({ shipments }) {
     <div className="reveal card relative overflow-hidden p-5">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-bold tracking-tight">Peta jalur distribusi</h3>
+          <h3 className="text-sm font-bold tracking-tight">{t('distribusi.petaJudul')}</h3>
           <p className="mt-0.5 text-xs text-faint">
-            Rute gudang pusat menuju lima titik unit layanan
+            {t('distribusi.petaSub')}
           </p>
         </div>
         <span className="flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-bold text-primary-ink">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-          {active} armada aktif
+          {t('distribusi.armadaAktif', { n: active })}
         </span>
       </div>
 
       <div ref={svgRef} className="relative">
-        <svg viewBox="0 0 620 230" className="h-auto w-full" role="img" aria-label="Peta jalur distribusi">
+        <svg viewBox="0 0 620 230" className="h-auto w-full" role="img" aria-label={t('distribusi.petaJudul')}>
           <defs>
             <linearGradient id="route" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="hsl(var(--primary))" />
@@ -207,7 +210,7 @@ function RouteMap({ shipments }) {
                 fontSize="10"
                 fontWeight="600"
               >
-                {n.label}
+                {td('lokasi', n.label)}
               </text>
             </g>
           ))}
@@ -218,6 +221,7 @@ function RouteMap({ shipments }) {
 }
 
 function ShipmentCard({ shp, onAdvance, busy }) {
+  const { t, td, lang } = useLang()
   const [open, setOpen] = useState(false)
   const done = shp.stage === 3
   const urgent = shp.priority === 'Urgent'
@@ -250,18 +254,18 @@ function ShipmentCard({ shp, onAdvance, busy }) {
               <p className="font-mono text-xs font-bold tracking-tight">{shp.id}</p>
               <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted">
                 <Building2 size={11} />
-                {shp.origin}
+                {td('lokasi', shp.origin)}
                 <ChevronRight size={11} className="text-faint" />
-                <span className="font-semibold text-ink">{shp.destination}</span>
+                <span className="font-semibold text-ink">{td('lokasi', shp.destination)}</span>
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {urgent && <StatusBadge level="critical" label="Urgent" icon={false} />}
+            {urgent && <StatusBadge level="critical" label={t('umum.urgent')} icon={false} />}
             <StatusBadge
               level={stageLevel[shp.stage]}
-              label={shipmentStages[shp.stage]}
+              label={td('tahap', shipmentStages[shp.stage])}
               icon={false}
               pulse={false}
             />
@@ -274,10 +278,10 @@ function ShipmentCard({ shp, onAdvance, busy }) {
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { icon: Package, label: 'Item', value: `${shp.items} jenis` },
-            { icon: User, label: 'Kurir', value: shp.driver },
-            { icon: Thermometer, label: 'Suhu', value: shp.temperature },
-            { icon: MapPin, label: 'ETA', value: shp.eta },
+            { icon: Package, label: t('distribusi.item'), value: `${shp.items} ${t('distribusi.jenis')}` },
+            { icon: User, label: t('distribusi.kurir'), value: shp.driver },
+            { icon: Thermometer, label: t('distribusi.suhu'), value: shp.temperature },
+            { icon: MapPin, label: t('distribusi.eta'), value: (lang === 'en' && shp.etaEn) || shp.eta },
           ].map((f) => (
             <div key={f.label} className="rounded-xl bg-elevated px-3 py-2.5">
               <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-faint">
@@ -294,7 +298,7 @@ function ShipmentCard({ shp, onAdvance, busy }) {
             onClick={() => setOpen((o) => !o)}
             className="text-[11px] font-bold text-muted transition-colors hover:text-ink"
           >
-            {open ? 'Sembunyikan riwayat' : 'Lihat riwayat checkpoint'}
+            {open ? t('distribusi.sembunyiRiwayat') : t('distribusi.lihatRiwayat')}
           </button>
 
           <motion.button
@@ -310,7 +314,7 @@ function ShipmentCard({ shp, onAdvance, busy }) {
             )}
           >
             <Zap size={12} strokeWidth={2.6} />
-            {done ? 'Selesai' : 'Lanjutkan tahap'}
+            {done ? t('distribusi.selesai') : t('distribusi.lanjutkan')}
           </motion.button>
         </div>
 
@@ -346,7 +350,7 @@ function ShipmentCard({ shp, onAdvance, busy }) {
                           reached ? 'font-semibold text-ink' : 'text-faint'
                         )}
                       >
-                        {s}
+                        {td('tahap', s)}
                       </p>
                       <p className="ml-auto text-[10px] text-faint">
                         {reached ? (i === 0 ? shp.departedAt : '✓') : '-'}
@@ -369,6 +373,7 @@ export default function DistribusiTrack() {
   const [tab, setTab] = useState('all')
   const scope = useRef(null)
   const toast = useToast()
+  const { t, td } = useLang()
 
   useEffect(() => {
     let alive = true
@@ -387,12 +392,12 @@ export default function DistribusiTrack() {
   const tabs = useMemo(() => {
     if (!shipments) return []
     return [
-      { key: 'all', label: 'Semua', n: shipments.length },
-      { key: 'transit', label: 'Perjalanan', n: shipments.filter((s) => s.stage > 0 && s.stage < 3).length },
-      { key: 'done', label: 'Selesai', n: shipments.filter((s) => s.stage === 3).length },
-      { key: 'queue', label: 'Antrean', n: shipments.filter((s) => s.stage === 0).length },
+      { key: 'all', label: t('distribusi.tabSemua'), n: shipments.length },
+      { key: 'transit', label: t('distribusi.tabPerjalanan'), n: shipments.filter((s) => s.stage > 0 && s.stage < 3).length },
+      { key: 'done', label: t('distribusi.tabSelesai'), n: shipments.filter((s) => s.stage === 3).length },
+      { key: 'queue', label: t('distribusi.tabAntrean'), n: shipments.filter((s) => s.stage === 0).length },
     ]
-  }, [shipments])
+  }, [shipments, t])
 
   const visible = useMemo(() => {
     if (!shipments) return []
@@ -407,7 +412,7 @@ export default function DistribusiTrack() {
     try {
       const updated = await advanceShipment(id)
       setShipments((prev) => prev.map((s) => (s.id === id ? updated : s)))
-      toast.success(`${id} → ${shipmentStages[updated.stage]}.`)
+      toast.success(t('distribusi.majuToast', { id, tahap: td('tahap', shipmentStages[updated.stage]) }))
     } catch (err) {
       toast.error(err.message)
     } finally {
@@ -428,8 +433,8 @@ export default function DistribusiTrack() {
     <div ref={scope} className="space-y-6">
       <PageHeader
         eyebrow="DistribusiTrack"
-        title="Pelacakan distribusi logistik"
-        description="Ikuti perjalanan setiap pengiriman obat dari gudang pusat sampai diterima dan diverifikasi unit apotek, lengkap dengan pemantauan rantai dingin."
+        title={t('distribusi.judul')}
+        description={t('distribusi.deskripsi')}
       />
 
       <RouteMap shipments={shipments} />
@@ -484,9 +489,9 @@ export default function DistribusiTrack() {
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-elevated text-faint">
             <Truck size={20} />
           </div>
-          <p className="text-sm font-bold">Belum ada pengiriman</p>
+          <p className="text-sm font-bold">{t('distribusi.kosongJudul')}</p>
           <p className="max-w-xs text-xs text-muted">
-            Tidak ada pengiriman pada kategori ini untuk saat ini.
+            {t('distribusi.kosongIsi')}
           </p>
         </motion.div>
       )}

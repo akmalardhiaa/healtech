@@ -144,7 +144,10 @@ export async function advanceShipment(id) {
   const shp = db.shipments.find((s) => s.id === id)
   if (!shp) throw new Error(`Pengiriman ${id} tidak ditemukan.`)
   shp.stage = Math.min(3, shp.stage + 1)
-  if (shp.stage === 3) shp.eta = 'Selesai'
+  if (shp.stage === 3) {
+    shp.eta = 'Selesai'
+    shp.etaEn = 'Completed'
+  }
   persist()
   return clone(shp)
 }
